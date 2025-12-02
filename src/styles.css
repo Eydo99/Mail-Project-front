@@ -1,1 +1,25 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --sidebar-bg: #e8d8c8;
+  --sidebar-bg-dark: #dfc8b7;
+  --accent: #8d493a;
+  --text: #7a4a38;
+  --muted: #b49785;
+  --radius: 16px;
+  --transition: 0.25s ease;
+}
+.cherry {
+  font-family: "Cherry Bomb One", cursive;font-weight: 700;   
+
+}
+.belanosima{
+  font-family: 'Belanosima', sans-serif;font-weight: 700;   
+
+}
+.kalam{
+ font-family: 'Kalam', cursive;
+font-weight: 700;   
+
+}
+.tanker{
+  font-family: 'Tanker', sans-serif;
+}

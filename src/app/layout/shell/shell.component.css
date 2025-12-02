@@ -1,0 +1,6 @@
+.app-shell {
+  display: flex;
+  height: 100vh;
+  padding: 6px;
+  background: #f7ede6;
+}
