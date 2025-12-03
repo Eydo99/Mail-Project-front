@@ -1,1 +1,83 @@
-<p>inbox-list works!</p>
+<div class="inbox-container">
+  <!-- Header -->
+  <div class="inbox-header">
+    <h1 class="inbox-title">Inbox</h1>
+
+    <div class="inbox-toolbar">
+      <button class="select-all-btn">Select All</button>
+
+      <input
+        type="text"
+        class="search-bar"
+        placeholder="Search emails..."
+        (input)="onSearch($any($event.target).value)"
+      />
+
+      <select class="sort-dropdown" (change)="onSortChange($any($event.target).value)">
+        <option value="date">Sort by Date</option>
+        <option value="sender">Sort by Sender</option>
+        <option value="subject">Sort by Subject</option>
+      </select>
+
+      <button class="filters-btn">Filters</button>
+    </div>
+  </div>
+
+  <!-- Email List -->
+  <div class="email-list">
+    <div
+      *ngFor="let email of emails"
+      class="email-item"
+      [class.unread]="!email.isRead"
+      [class.selected]="email.id === selectedEmailId"
+      (click)="onEmailClick(email)"
+    >
+      <input type="checkbox" class="email-checkbox" (click)="$event.stopPropagation()" />
+
+      <div class="email-content">
+        <div class="email-header">
+          <span class="email-sender">{{ email.sender }}</span>
+
+          <img
+            [src]="email.isStarred ? 'assets/icons/star-filled.png' : 'assets/icons/star.png'"
+            [alt]="email.isStarred ? 'Starred' : 'Star'"
+            class="icon star-icon"
+            (click)="toggleStar($event, email)"
+          />
+
+          <img
+            *ngIf="email.hasAttachment"
+            src="assets/icons/attachment.png"
+            alt="Attachment"
+            class="icon"
+          />
+
+          <img
+            *ngIf="email.isUrgent"
+            src="assets/icons/urgent.png"
+            alt="Urgent"
+            class="icon"
+          />
+        </div>
+
+        <div class="email-subject">{{ email.subject }}</div>
+        <div class="email-preview">{{ email.preview }}</div>
+      </div>
+
+      <div class="email-time">
+        {{ email.timestamp | date:'shortTime' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer / Pagination -->
+  <div class="inbox-footer">
+    <div class="page-info">Page 1 of 1</div>
+
+    <div class="pagination">
+      <button class="page-btn" disabled>Previous</button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn" disabled>Next</button>
+    </div>
+  </div>
+</div>
