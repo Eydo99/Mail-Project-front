@@ -3,9 +3,7 @@
        (mouseenter)="onMouseEnter()"
        (mouseleave)="onMouseLeave()">
 
-       
-       
-       <div class="sidebar-inner">
+  <div class="sidebar-inner">
 
     <!-- Header -->
     <header class="sidebar-header">
@@ -21,70 +19,62 @@
     <nav class="sidebar-nav">
       <ul class="nav-list">
         <li class="nav-item">
-<button class="nav-btn" (click)="navigate('inbox')">
-<img class="nav-icon" src="assets/icons/inbox(2).png" alt="Inbox">
-
-  <span class="label kalam">Inbox</span>
-</button>
-
+          <button class="nav-btn" (click)="navigate('inbox')">
+            <lucide-icon [img]="Inbox" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Inbox</span>
+          </button>
         </li>
 
         <li class="nav-item">
-         <button class="nav-btn" (click)="navigate('priority')">
-  <img class="nav-icon" src="assets/icons/star.png" alt="Priority">
-  <span class="label kalam">Priority Inbox</span>
-</button>
-
+          <button class="nav-btn" (click)="navigate('priority')">
+            <lucide-icon [img]="Star" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Priority Inbox</span>
+          </button>
         </li>
 
         <li class="nav-item">
           <button class="nav-btn" (click)="navigate('sent')">
-  <img class="nav-icon" src="assets/icons/send.png" alt="Sent">
-  <span class="label kalam">Sent</span>
-</button>
-
+            <lucide-icon [img]="Send" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Sent</span>
+          </button>
         </li>
 
         <li class="nav-item">
-        <button class="nav-btn" (click)="navigate('drafts')">
-  <img class="nav-icon" src="assets/icons/draft.png" alt="Drafts">
-  <span class="label kalam">Drafts</span>
-</button>
-
+          <button class="nav-btn" (click)="navigate('drafts')">
+            <lucide-icon [img]="FileText" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Drafts</span>
+          </button>
         </li>
 
         <li class="nav-item">
-        <button class="nav-btn" (click)="navigate('trash')">
-  <img class="nav-icon" src="assets/icons/trash.png" alt="Trash">
-  <span class="label kalam">Trash</span>
-</button>
-
+          <button class="nav-btn" (click)="navigate('trash')">
+            <lucide-icon [img]="Trash2" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Trash</span>
+          </button>
         </li>
       </ul>
 
-<div class="folders-label cherry">Folders</div>
+      <div class="folders-label cherry">Folders</div>
       <ul class="folder-list">
-        <!-- folder-card is a small child component; it accepts @Input() name -->
-       <!-- <li><app-folder-card name="Marketing"></app-folder-card></li> -->
-      <!-- <li><app-folder-card name="Clients"></app-folder-card></li> -->
-        <!-- <li><app-folder-card name="Work"></app-folder-card></li> -->
+        <!-- Folder items go here -->
       </ul>
     </nav>
 
     <!-- Bottom actions -->
     <div class="sidebar-footer">
-     <button class="utility-btn" (click)="navigate('contacts')">
-  <img class="nav-icon" src="assets/icons/customer-service.png" alt="Contacts">
-  <span class="label">Contacts</span>
-</button>
+      <button class="utility-btn" (click)="navigate('contacts')">
+        <lucide-icon [img]="Users" class="nav-icon"></lucide-icon>
+        <span class="label">Contacts</span>
+      </button>
 
       <button class="utility-btn" (click)="navigate('settings')">
-<img class="nav-icon" src="assets/icons/settings(1).png" alt="Settings">
+        <lucide-icon [img]="Settings" class="nav-icon"></lucide-icon>
         <span class="label">Settings</span>
       </button>
 
       <button class="new-message-btn belanosima" (click)="openCompose()">
-        New Message
+        <lucide-icon [img]="Plus" class="compose-icon"></lucide-icon>
+        <span class="btn-text">New Message</span>
       </button>
     </div>
 

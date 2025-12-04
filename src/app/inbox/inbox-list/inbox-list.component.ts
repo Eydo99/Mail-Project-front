@@ -3,15 +3,22 @@ import { CommonModule } from '@angular/common';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
 import { Email } from '../../core/models/email.model';
+import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter } from 'lucide-angular';
 
 @Component({
   selector: 'app-inbox-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './inbox-list.component.html',
   styleUrl: './inbox-list.component.css'
 })
 export class InboxListComponent implements OnInit {
+  // Export icons for template
+  readonly Star = Star;
+  readonly Paperclip = Paperclip;
+  readonly AlertCircle = AlertCircle;
+  readonly Filter = Filter;
+
   emails: Email[] = [];
   searchQuery: string = '';
   sortBy: string = 'date';

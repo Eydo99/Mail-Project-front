@@ -2,8 +2,8 @@
 .app-shell {
   display: flex;
   height: 100vh;
-  width: 98vw;
-  background: #f7ede6;
+  width: 100vw;
+  background: #dfeefd;
   overflow: hidden; /* Prevents scrollbars on the body */
 }
 

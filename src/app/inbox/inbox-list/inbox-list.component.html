@@ -19,7 +19,10 @@
         <option value="subject">Sort by Subject</option>
       </select>
 
-      <button class="filters-btn">Filters</button>
+      <button class="filters-btn">
+        <lucide-icon [img]="Filter" class="filter-icon"></lucide-icon>
+        <span>Filters</span>
+      </button>
     </div>
   </div>
 
@@ -38,26 +41,27 @@
         <div class="email-header">
           <span class="email-sender">{{ email.sender }}</span>
 
-          <img
-            [src]="email.isStarred ? 'assets/icons/star-filled.png' : 'assets/icons/star.png'"
-            [alt]="email.isStarred ? 'Starred' : 'Star'"
+          <!-- Star Icon -->
+          <lucide-icon
+            [img]="Star"
+            [class.starred]="email.isStarred"
             class="icon star-icon"
             (click)="toggleStar($event, email)"
-          />
+          ></lucide-icon>
 
-          <img
+          <!-- Attachment Icon -->
+          <lucide-icon
             *ngIf="email.hasAttachment"
-            src="assets/icons/attachment.png"
-            alt="Attachment"
-            class="icon"
-          />
+            [img]="Paperclip"
+            class="icon attachment-icon"
+          ></lucide-icon>
 
-          <img
+          <!-- Urgent Icon -->
+          <lucide-icon
             *ngIf="email.isUrgent"
-            src="assets/icons/urgent.png"
-            alt="Urgent"
-            class="icon"
-          />
+            [img]="AlertCircle"
+            class="icon urgent-icon"
+          ></lucide-icon>
         </div>
 
         <div class="email-subject">{{ email.subject }}</div>

@@ -1,27 +1,39 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen } from 'lucide-angular';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [],
+  imports: [LucideAngularModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
 export class SidebarComponent {
-    isOpen: boolean = true;
+  // Export icons for template use
+  readonly Inbox = Inbox;
+  readonly Star = Star;
+  readonly Send = Send;
+  readonly FileText = FileText;
+  readonly Trash2 = Trash2;
+  readonly Users = Users;
+  readonly Settings = Settings;
+  readonly Plus = Plus;
+  readonly FolderOpen = FolderOpen;
 
-   constructor(private router: Router) {}
+  isOpen: boolean = true;
 
-   navigate(route: string) {
+  constructor(private router: Router) {}
+
+  navigate(route: string) {
     this.router.navigate([route]);
   }
 
- openCompose() {
-  
+  openCompose() {
+    // TODO: Open compose modal
   }
 
- toggleSidebar() {
+  toggleSidebar() {
     this.isOpen = !this.isOpen;
   }
 
@@ -32,6 +44,4 @@ export class SidebarComponent {
   onMouseLeave() {
     this.isOpen = false;
   }
-
-
 }
