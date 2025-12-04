@@ -1,0 +1,83 @@
+<div class="inbox-container">
+  <!-- Header -->
+  <div class="inbox-header">
+    <h1 class="inbox-title">Inbox</h1>
+
+    <div class="inbox-toolbar">
+      <button class="select-all-btn">Select All</button>
+
+      <input
+        type="text"
+        class="search-bar"
+        placeholder="Search emails..."
+        (input)="onSearch($any($event.target).value)"
+      />
+
+      <select class="sort-dropdown" (change)="onSortChange($any($event.target).value)">
+        <option value="date">Sort by Date</option>
+        <option value="sender">Sort by Sender</option>
+        <option value="subject">Sort by Subject</option>
+      </select>
+
+      <button class="filters-btn">
+        <lucide-icon [img]="Filter" class="filter-icon"></lucide-icon>
+        <span>Filters</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Email List -->
+  <div class="email-list">
+    <div
+      *ngFor="let email of paginatedEmails"
+      class="email-item"
+      [class.selected]="email.id === selectedEmailId"
+      (click)="onEmailClick(email)"
+    >
+      <input type="checkbox" class="email-checkbox" (click)="$event.stopPropagation()" />
+
+      <div class="email-content">
+        <div class="email-header">
+          <span class="email-sender">{{ email.sender }}</span>
+
+          <!-- Star Icon -->
+          <lucide-icon
+            [img]="Star"
+            [class.starred]="email.isStarred"
+            class="icon star-icon"
+            (click)="toggleStar($event, email)"
+          ></lucide-icon>
+
+          <!-- Attachment Icon -->
+          <lucide-icon
+            *ngIf="email.hasAttachment"
+            [img]="Paperclip"
+            class="icon attachment-icon"
+          ></lucide-icon>
+
+          <!-- Urgent Icon -->
+          <lucide-icon
+            [img]="AlertCircle"
+            class="icon urgent-icon"
+          ></lucide-icon>
+        </div>
+
+        <div class="email-subject">{{ email.subject }}</div>
+        <div class="email-preview">{{ email.preview }}</div>
+      </div>
+
+      <div class="email-time">
+        {{ email.timestamp | date:'shortTime' }}
+      </div>
+    </div>
+  </div>
+
+<!--  //pagination-->
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalItems]="totalItems"
+    [itemsPerPage]="itemsPerPage"
+    (pageChange)="onPageChange($event)"
+    (itemsPerPageChange)="onItemsPerPageChange($event)"
+  ></app-pagination>
+</div>

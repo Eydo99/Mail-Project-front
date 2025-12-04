@@ -1,0 +1,80 @@
+<aside class="reader-panel" [class.open]="isOpen">
+  <div *ngIf="selectedEmail" class="reader-content">
+    <!-- Header -->
+    <div class="reader-header">
+      <button class="close-btn" (click)="closeReader()">
+        <img src="assets/icons/close.png" alt="Close" class="icon" />
+      </button>
+
+      <div class="action-buttons">
+        <button class="action-btn" (click)="onReply()" title="Reply">
+          <img src="assets/icons/reply.png" alt="Reply" class="icon" />
+        </button>
+        <button class="action-btn" (click)="onForward()" title="Forward">
+          <img src="assets/icons/forward.png" alt="Forward" class="icon" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Email Details -->
+    <div class="reader-body">
+      <h2 class="email-subject">{{ selectedEmail.subject }}</h2>
+
+      <div class="sender-info">
+        <div class="sender-avatar">
+          {{ selectedEmail.sender.charAt(0).toUpperCase() }}
+        </div>
+        <div class="sender-details">
+          <div class="sender-name">{{ selectedEmail.sender }}</div>
+          <div class="sender-email">{{ selectedEmail.senderEmail }}</div>
+        </div>
+        <div class="email-timestamp">
+          {{ selectedEmail.timestamp | date:'medium' }}
+        </div>
+      </div>
+
+      <!-- Email Body -->
+      <div class="email-body">
+        <p>{{ selectedEmail.body }}</p>
+
+        <!-- Simulate full email content -->
+        <p>
+          Thank you for your attention to this matter. I've reviewed the details
+          and would like to discuss further at your earliest convenience.
+        </p>
+
+        <p>
+          Please let me know if you have any questions or need additional information.
+        </p>
+
+        <p>Best regards,<br/>{{ selectedEmail.sender }}</p>
+      </div>
+
+      <!-- Attachments (if any) -->
+      <div *ngIf="selectedEmail.hasAttachment" class="attachments">
+        <div class="attachment-label">Attachments</div>
+        <div class="attachment-item">
+          <img src="assets/icons/pdf.png" alt="PDF" class="attachment-icon" />
+          <span class="attachment-name">Q4_Report.pdf</span>
+          <span class="attachment-size">2.4 MB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="reader-footer">
+      <button class="reply-btn" (click)="onReply()">
+        Reply
+      </button>
+      <button class="forward-btn" (click)="onForward()">
+        Forward
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!selectedEmail" class="empty-state">
+    <img src="assets/icons/mail-open.png" alt="No email" class="empty-icon" />
+    <p class="empty-text">Select an email to read</p>
+  </div>
+</aside>

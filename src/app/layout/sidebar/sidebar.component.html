@@ -1,0 +1,82 @@
+<aside class="sidebar"
+       [class.closed]="!isOpen"
+       (mouseenter)="onMouseEnter()"
+       (mouseleave)="onMouseLeave()">
+
+  <div class="sidebar-inner">
+
+    <!-- Header -->
+    <header class="sidebar-header">
+      <div class="brand">
+        <div class="brand-avatar" aria-hidden="true"></div>
+        <div class="brand-text">
+          <div class="brand-title tanker">MAILBAR</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <button class="nav-btn" (click)="navigate('inbox')">
+            <lucide-icon [img]="Inbox" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Inbox</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button class="nav-btn" (click)="navigate('priority')">
+            <lucide-icon [img]="Star" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Priority Inbox</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button class="nav-btn" (click)="navigate('sent')">
+            <lucide-icon [img]="Send" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Sent</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button class="nav-btn" (click)="navigate('drafts')">
+            <lucide-icon [img]="FileText" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Drafts</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button class="nav-btn" (click)="navigate('trash')">
+            <lucide-icon [img]="Trash2" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Trash</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="folders-label cherry">Folders</div>
+      <ul class="folder-list">
+        <!-- Folder items go here -->
+      </ul>
+    </nav>
+
+    <!-- Bottom actions -->
+    <div class="sidebar-footer">
+      <button class="utility-btn" (click)="navigate('contacts')">
+        <lucide-icon [img]="Users" class="nav-icon"></lucide-icon>
+        <span class="label">Contacts</span>
+      </button>
+
+      <button class="utility-btn" (click)="navigate('settings')">
+        <lucide-icon [img]="Settings" class="nav-icon"></lucide-icon>
+        <span class="label">Settings</span>
+      </button>
+
+      <button class="new-message-btn belanosima" (click)="openCompose()">
+        <lucide-icon [img]="Plus" class="compose-icon"></lucide-icon>
+        <span class="btn-text">New Message</span>
+      </button>
+    </div>
+
+  </div>
+</aside>
