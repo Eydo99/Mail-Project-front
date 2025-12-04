@@ -4,10 +4,10 @@ export interface Email {
   senderEmail: string;
   subject: string;
   preview: string;
-  timestamp: Date;
-  isRead: boolean;
+  body: string;
+  timestamp: string;
   isStarred: boolean;
   hasAttachment: boolean;
-  isUrgent: boolean;
+  priority: number;
   folder?: string;
 }

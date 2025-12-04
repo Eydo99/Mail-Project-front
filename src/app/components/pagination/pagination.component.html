@@ -3,11 +3,11 @@
     <span class="items-info">
       Showing {{ startItem }} - {{ endItem }} of {{ totalItems }}
     </span>
-    
+
     <div class="items-per-page">
       <label for="itemsPerPage">Items per page:</label>
-      <select 
-        id="itemsPerPage" 
+      <select
+        id="itemsPerPage"
         [value]="itemsPerPage"
         (change)="onItemsPerPageChange(+$any($event.target).value)"
         class="items-select"
@@ -20,7 +20,7 @@
 
   <div class="pagination-controls">
     <!-- Previous Button -->
-    <button 
+    <button
       class="pagination-btn"
       [disabled]="!hasPreviousPage"
       (click)="goToPreviousPage()"
@@ -30,19 +30,19 @@
     </button>
 
     <!-- First Page -->
-    <button 
+    <button
       *ngIf="showFirstPage"
       class="pagination-btn page-number"
       (click)="goToFirstPage()"
     >
       1
     </button>
-    
+
     <!-- Ellipsis before -->
     <span *ngIf="showFirstPage" class="ellipsis">...</span>
 
     <!-- Page Numbers -->
-    <button 
+    <button
       *ngFor="let page of visiblePages"
       class="pagination-btn page-number"
       [class.active]="page === currentPage"
@@ -55,7 +55,7 @@
     <span *ngIf="showLastPage" class="ellipsis">...</span>
 
     <!-- Last Page -->
-    <button 
+    <button
       *ngIf="showLastPage"
       class="pagination-btn page-number"
       (click)="goToLastPage()"
@@ -64,7 +64,7 @@
     </button>
 
     <!-- Next Button -->
-    <button 
+    <button
       class="pagination-btn"
       [disabled]="!hasNextPage"
       (click)="goToNextPage()"

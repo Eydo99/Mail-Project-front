@@ -29,9 +29,8 @@
   <!-- Email List -->
   <div class="email-list">
     <div
-      *ngFor="let email of emails"
+      *ngFor="let email of paginatedEmails"
       class="email-item"
-      [class.unread]="!email.isRead"
       [class.selected]="email.id === selectedEmailId"
       (click)="onEmailClick(email)"
     >
@@ -58,7 +57,6 @@
 
           <!-- Urgent Icon -->
           <lucide-icon
-            *ngIf="email.isUrgent"
             [img]="AlertCircle"
             class="icon urgent-icon"
           ></lucide-icon>
@@ -74,14 +72,12 @@
     </div>
   </div>
 
-  <!-- Footer / Pagination -->
-  <div class="inbox-footer">
-    <div class="page-info">Page 1 of 1</div>
-
-    <div class="pagination">
-      <button class="page-btn" disabled>Previous</button>
-      <button class="page-btn active">1</button>
-      <button class="page-btn" disabled>Next</button>
-    </div>
-  </div>
+<!--  //pagination-->
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalItems]="totalItems"
+    [itemsPerPage]="itemsPerPage"
+    (pageChange)="onPageChange($event)"
+    (itemsPerPageChange)="onItemsPerPageChange($event)"
+  ></app-pagination>
 </div>
