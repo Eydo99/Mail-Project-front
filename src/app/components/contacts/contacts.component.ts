@@ -16,6 +16,7 @@ import { PaginationComponent } from '../pagination/pagination.component';
   templateUrl: './contacts.component.html',
   styleUrls: ['./contacts.component.css']
 })
+
 export class ContactsComponent implements OnInit {
   contacts: Contact[] = [];
   filteredContacts: Contact[] = [];
@@ -45,6 +46,9 @@ export class ContactsComponent implements OnInit {
     this.updatePaginatedContacts();
   }
 
+
+
+  //should be handled from backend
   loadMockData(): void {
     this.contacts = [
       {
@@ -98,7 +102,7 @@ export class ContactsComponent implements OnInit {
       }
     ];
   }
-
+  //will be modified with HTTP
   onSearch(): void {
     const term = this.searchTerm.toLowerCase().trim();
     if (!term) {
@@ -115,12 +119,13 @@ export class ContactsComponent implements OnInit {
     this.currentPage = 1; // Reset to first page on search
     this.updatePaginatedContacts();
   }
-
+  //will be modified with HTTP
   onSort(): void {
     this.applySorting();
     this.updatePaginatedContacts();
   }
 
+  //will be handled at back
   applySorting(): void {
     this.filteredContacts.sort((a, b) => {
       if (this.sortBy === 'name') {
@@ -133,30 +138,33 @@ export class ContactsComponent implements OnInit {
       return 0;
     });
   }
-
+  //will be handled at back
   updatePaginatedContacts(): void {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     this.paginatedContacts = this.filteredContacts.slice(startIndex, endIndex);
   }
 
+  //will be modified with HTTP
   onPageChange(page: number): void {
     this.currentPage = page;
     this.updatePaginatedContacts();
   }
 
+  //will be modified with HTTP
   onItemsPerPageChange(itemsPerPage: number): void {
     this.itemsPerPage = itemsPerPage;
     this.currentPage = 1; // Reset to first page
     this.updatePaginatedContacts();
   }
 
+  //Frontend
   openAddModal(): void {
     this.modalMode = 'add';
     this.resetForm();
     this.showModal = true;
   }
-
+  //Frontend
   openEditModal(contact: Contact): void {
     this.modalMode = 'edit';
     this.selectedContact = contact;
@@ -165,19 +173,19 @@ export class ContactsComponent implements OnInit {
     this.formPhones = contact.phones.map(p => ({ ...p }));
     this.showModal = true;
   }
-
+  //frontend
   closeModal(): void {
     this.showModal = false;
     this.resetForm();
   }
-
+  //frontend
   resetForm(): void {
     this.formName = '';
     this.formEmails = [{ id: this.generateId(), address: '', isPrimary: true }];
     this.formPhones = [{ id: this.generateId(), number: '', isPrimary: true }];
     this.selectedContact = null;
   }
-
+  //frontend
   addEmailField(): void {
     this.formEmails.push({
       id: this.generateId(),
@@ -185,7 +193,7 @@ export class ContactsComponent implements OnInit {
       isPrimary: false
     });
   }
-
+  //frontend
   removeEmailField(index: number): void {
     if (this.formEmails.length > 1) {
       this.formEmails.splice(index, 1);
@@ -195,13 +203,13 @@ export class ContactsComponent implements OnInit {
       }
     }
   }
-
+  //frontend
   setPrimaryEmail(index: number): void {
     this.formEmails.forEach((email, i) => {
       email.isPrimary = i === index;
     });
   }
-
+  //frontend
   addPhoneField(): void {
     this.formPhones.push({
       id: this.generateId(),
@@ -209,7 +217,7 @@ export class ContactsComponent implements OnInit {
       isPrimary: false
     });
   }
-
+  //frontend
   removePhoneField(index: number): void {
     if (this.formPhones.length > 1) {
       this.formPhones.splice(index, 1);
@@ -219,13 +227,13 @@ export class ContactsComponent implements OnInit {
       }
     }
   }
-
+  //frontend
   setPrimaryPhone(index: number): void {
     this.formPhones.forEach((phone, i) => {
       phone.isPrimary = i === index;
     });
   }
-
+  //will be modified with HTTP
   saveContact(): void {
     if (!this.formName.trim() || !this.formEmails.some(e => e.address.trim())) {
       alert('Please provide a name and at least one email address.');
@@ -261,7 +269,7 @@ export class ContactsComponent implements OnInit {
     this.onSearch();
     this.closeModal();
   }
-
+  //will be modified with HTTP
   deleteContact(contact: Contact): void {
     if (confirm(`Are you sure you want to delete ${contact.name}?`)) {
       this.contacts = this.contacts.filter(c => c.id !== contact.id);
@@ -269,10 +277,11 @@ export class ContactsComponent implements OnInit {
     }
   }
 
+  //will be handled at back
   generateId(): string {
     return Math.random().toString(36).substr(2, 9);
   }
-
+  //will be handled at back
   generateInitials(name: string): string {
     return name
       .split(' ')
@@ -281,7 +290,7 @@ export class ContactsComponent implements OnInit {
       .toUpperCase()
       .substring(0, 2);
   }
-
+  //will be handled at back
   generateRandomColor(): string {
     const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
     return colors[Math.floor(Math.random() * colors.length)];
