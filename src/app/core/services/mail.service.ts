@@ -42,7 +42,7 @@ export class MailService {
       subject: email.subject,
       preview: email.preview,
       body: email.body,
-      timestamp: email.timestamp,
+      timestamp: email.timestamp, // Keep as string, Angular will handle it in template
       isStarred: email.starred,
       hasAttachment: email.hasAttachment,
       priority: email.priority
@@ -160,6 +160,19 @@ export class MailService {
    * Delete an email
    */
   deleteEmail(emailId: string, folder: string): Observable<string> {
+    console.log(`${this.apiUrl}/${emailId}/${folder}`);
     return this.http.delete<string>(`${this.apiUrl}/${emailId}?folder=${folder}`);
   }
+
+  /**
+   * Move email to another folder
+   */
+  moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
+    return this.http.put<string>(
+      `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
+      {}
+    );
+  }
+
+
 }
