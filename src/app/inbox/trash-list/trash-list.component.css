@@ -203,17 +203,6 @@
   font-size: 14px;
 }
 
-.sort-icon {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.sort-icon:hover {
-  transform: scale(1.1);
-}
-
 .filters-btn {
   padding: 10px 20px;
   background: white;
@@ -253,10 +242,6 @@
   background: #f5f5f5;
 }
 
-.email-item.unread {
-  background: #f9f9f9;
-}
-
 .email-item.selected {
   background: rgba(69, 104, 130, 0.15) !important;
   border-left: 4px solid #234C6A;
@@ -291,22 +276,44 @@
   font-size: 15px;
 }
 
-.email-item.unread .email-sender {
-  font-weight: 700;
-}
-
 .icon {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  stroke: #456882;
+  stroke-width: 2;
+  transition: all 0.2s;
 }
 
 .star-icon {
+  fill: none;
+  stroke: #456882;
   transition: transform 0.2s;
+}
+
+.star-icon.starred {
+  fill: #FFA500;
+  stroke: #FFA500;
 }
 
 .star-icon:hover {
   transform: scale(1.2);
+  stroke: #234C6A;
+}
+
+.star-icon.starred:hover {
+  fill: #FF8C00;
+  stroke: #FF8C00;
+}
+
+.attachment-icon {
+  stroke: #456882;
+  cursor: default;
+}
+
+.urgent-icon {
+  stroke: #ef4444;
+  fill: none;
 }
 
 .email-subject {
@@ -331,52 +338,41 @@
   margin-left: auto;
 }
 
-/* Pagination */
-.inbox-footer {
-  padding: 16px 24px;
-  border-top: 2px solid #E3E3E3;
-  background: #f5f5f5;
+/* Empty State */
+.empty-state {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #999;
 }
 
-.page-info {
-  font-size: 14px;
-  color: #666;
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  stroke: #ccc;
+  margin-bottom: 16px;
 }
 
-.pagination {
-  display: flex;
-  gap: 8px;
+.empty-message {
+  font-size: 18px;
+  font-weight: 500;
+  color: #999;
 }
 
-.page-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+/* Filter icon */
+.filter-icon {
+  width: 16px;
+  height: 16px;
+  stroke: #234C6A;
 }
 
-.page-btn:hover:not(:disabled) {
-  background: #f5f5f5;
+.filters-btn:hover .filter-icon {
+  stroke: white;
 }
 
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-btn.active {
-  background: #234C6A;
-  color: white;
-  border-color: #234C6A;
-}
-
-/* Scrollbar Styling */
+/* Scrollbar */
 .email-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -392,58 +388,4 @@
 
 .email-list::-webkit-scrollbar-thumb:hover {
   background: #234C6A;
-}
-
-/* Filter button icon */
-.filter-icon {
-  width: 16px;
-  height: 16px;
-  stroke: #234C6A;
-}
-
-.filters-btn:hover .filter-icon {
-  stroke: white;
-}
-
-/* Email icons */
-.icon {
-  width: 16px;
-  height: 16px;
-  stroke: #456882;
-  stroke-width: 2;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* Star icon */
-.star-icon {
-  fill: none;
-  stroke: #456882;
-}
-
-.star-icon.starred {
-  fill: #FFA500;
-  stroke: #FFA500;
-}
-
-.star-icon:hover {
-  transform: scale(1.2);
-  stroke: #234C6A;
-}
-
-.star-icon.starred:hover {
-  fill: #FF8C00;
-  stroke: #FF8C00;
-}
-
-/* Attachment icon */
-.attachment-icon {
-  stroke: #456882;
-  cursor: default;
-}
-
-/* Urgent icon */
-.urgent-icon {
-  stroke: #ef4444;
-  fill: none;
 }

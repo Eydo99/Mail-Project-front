@@ -1,7 +1,7 @@
 import { Email } from "./EmailContacts"
 import { Phone } from "./phoneContacts";
 export interface Contact {
-  id: string;
+  id?: string;
   name: string;
   emails: Email[];
   phones: Phone[];

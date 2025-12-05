@@ -11,16 +11,16 @@ import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { EmailFilterService } from '../../core/services/email-filter.service';
 
 @Component({
-  selector: 'app-inbox-list',
+  selector: 'app-trash-list',
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent],
-  templateUrl: './inbox-list.component.html',
-  styleUrl: './inbox-list.component.css'
+  templateUrl: './trash-list.component.html',
+  styleUrl: './trash-list.component.css'
 })
-export class InboxListComponent implements OnInit {
+export class TrashListComponent implements OnInit {
   // Folder configuration
-  folderName: string = 'inbox';
-  title: string = 'Inbox';
+  folderName: string = 'trash';
+  title: string = 'Trash';
 
   // Pagination properties
   paginatedEmails: Email[] = [];
@@ -166,9 +166,6 @@ export class InboxListComponent implements OnInit {
 
   // ============== SELECTION & ACTION BAR ==============
 
-  /**
-   * Toggle individual email selection
-   */
   toggleEmailSelection(event: Event, emailId: string): void {
     event.stopPropagation();
 
@@ -181,16 +178,10 @@ export class InboxListComponent implements OnInit {
     this.updateActionBarVisibility();
   }
 
-  /**
-   * Check if email is selected
-   */
   isEmailSelected(emailId: string): boolean {
     return this.selectedEmails.has(emailId);
   }
 
-  /**
-   * Select or deselect all emails
-   */
   toggleSelectAll(): void {
     if (this.areAllSelected()) {
       this.selectedEmails.clear();
@@ -203,53 +194,38 @@ export class InboxListComponent implements OnInit {
     this.updateActionBarVisibility();
   }
 
-  /**
-   * Check if all emails are selected
-   */
   areAllSelected(): boolean {
     return this.paginatedEmails.length > 0 &&
       this.selectedEmails.size === this.paginatedEmails.length;
   }
 
-  /**
-   * Update action bar visibility
-   */
   updateActionBarVisibility(): void {
     this.showActionBar = this.selectedEmails.size > 0;
   }
 
-  /**
-   * Get count of selected emails
-   */
   getSelectedCount(): number {
     return this.selectedEmails.size;
   }
 
-  /**
-   * Close action bar and clear selection
-   */
   closeActionBar(): void {
     this.selectedEmails.clear();
     this.showActionBar = false;
     this.moveToFolder = '';
   }
 
-  /**
-   * Handle folder selection change
-   */
   onFolderChange(folder: string): void {
     this.moveToFolder = folder;
   }
 
-  // ============== ACTIONS ==============
+  // ============== ACTIONS (Trash-specific) ==============
 
   /**
-   * Delete selected emails
+   * Permanently delete selected emails from trash
    */
   deleteSelectedEmails(): void {
     if (this.selectedEmails.size === 0) return;
 
-    const confirmDelete = confirm(`Move ${this.selectedEmails.size} email(s) to trash?`);
+    const confirmDelete = confirm(`Permanently delete ${this.selectedEmails.size} email(s)? This cannot be undone.`);
     if (!confirmDelete) return;
 
     const selectedIds = Array.from(this.selectedEmails);
@@ -257,13 +233,13 @@ export class InboxListComponent implements OnInit {
     let successCount = 0;
 
     selectedIds.forEach(emailId => {
-      this.mailService.deleteEmail(emailId, this.folderName).subscribe({
+      this.mailService.deleteEmail(emailId, 'trash').subscribe({
         next: () => {
           successCount++;
           completedRequests++;
 
           if (completedRequests === selectedIds.length) {
-            this.onActionComplete(successCount, selectedIds.length, 'deleted');
+            this.onActionComplete(successCount, selectedIds.length, 'permanently deleted');
           }
         },
         error: (error) => {
@@ -271,7 +247,7 @@ export class InboxListComponent implements OnInit {
           completedRequests++;
 
           if (completedRequests === selectedIds.length) {
-            this.onActionComplete(successCount, selectedIds.length, 'deleted');
+            this.onActionComplete(successCount, selectedIds.length, 'permanently deleted');
           }
         }
       });
@@ -279,7 +255,7 @@ export class InboxListComponent implements OnInit {
   }
 
   /**
-   * Move selected emails to another folder
+   * Restore (move) selected emails from trash
    */
   moveSelectedEmails(): void {
     if (this.selectedEmails.size === 0 || !this.moveToFolder) {
@@ -292,37 +268,34 @@ export class InboxListComponent implements OnInit {
     let successCount = 0;
 
     selectedIds.forEach(emailId => {
-      this.mailService.moveEmail(emailId, this.folderName, this.moveToFolder).subscribe({
+      this.mailService.moveEmail(emailId, 'trash', this.moveToFolder).subscribe({
         next: () => {
           successCount++;
           completedRequests++;
 
           if (completedRequests === selectedIds.length) {
-            this.onActionComplete(successCount, selectedIds.length, 'moved');
+            this.onActionComplete(successCount, selectedIds.length, 'restored');
           }
         },
         error: (error) => {
-          console.error(`Failed to move email ${emailId}:`, error);
+          console.error(`Failed to restore email ${emailId}:`, error);
           completedRequests++;
 
           if (completedRequests === selectedIds.length) {
-            this.onActionComplete(successCount, selectedIds.length, 'moved');
+            this.onActionComplete(successCount, selectedIds.length, 'restored');
           }
         }
       });
     });
   }
 
-  /**
-   * Handle action completion
-   */
   private onActionComplete(successCount: number, totalCount: number, action: string): void {
     if (successCount > 0) {
       this.loadEmails();
       this.closeActionBar();
-      const message = action === 'moved'
-        ? `${successCount} of ${totalCount} email(s) moved to ${this.moveToFolder}`
-        : `${successCount} of ${totalCount} email(s) moved to trash`;
+      const message = action === 'restored'
+        ? `${successCount} of ${totalCount} email(s) restored to ${this.moveToFolder}`
+        : `${successCount} of ${totalCount} email(s) ${action}`;
       alert(message);
     } else {
       alert(`Failed to ${action} emails`);
