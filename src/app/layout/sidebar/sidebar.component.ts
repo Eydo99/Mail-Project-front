@@ -1,47 +1,85 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen } from 'lucide-angular';
+import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen,Folder } from 'lucide-angular';
+
+export interface Folder {
+  id: string;
+  name: string;
+  icon: string;
+  isDefault?: boolean;
+}
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.css'
+  styleUrls: ['./sidebar.component.css']
 })
-export class SidebarComponent {
-  // Export icons for template use
-  readonly Inbox = Inbox;
-  readonly Star = Star;
-  readonly Send = Send;
-  readonly FileText = FileText;
-  readonly Trash2 = Trash2;
-  readonly Users = Users;
-  readonly Settings = Settings;
-  readonly Plus = Plus;
-  readonly FolderOpen = FolderOpen;
+export class SidebarComponent implements OnInit {
+  // Lucide icons
+  Inbox = Inbox;
+  Star = Star;
+  Send = Send;
+  FileText = FileText;
+  Trash2 = Trash2;
+  Users = Users;
+  Settings = Settings;
+  Plus = Plus;
+  FolderOpen = FolderOpen;
+  folder=Folder;
 
-  isOpen: boolean = true;
+  isOpen = true;
+  folders: Folder[] = [];
+  showFolderModal = false;
 
   constructor(private router: Router) {}
 
-  navigate(route: string) {
-    this.router.navigate([route]);
+  ngOnInit(): void {
+    this.loadFolders();
   }
 
-  openCompose() {
-    // TODO: Open compose modal
+  loadFolders(): void {
+    // Mock folders
+    this.folders = [
+      { id: '1', name: 'Work', icon: '💼', isDefault: true },
+      { id: '2', name: 'Personal', icon: '👤', isDefault: true },
+      { id: '3', name: 'Projects', icon: '📋', isDefault: false },
+      { id: '4', name: 'Important', icon: '⭐', isDefault: false },
+      { id: '5', name: 'Family', icon: '🏠', isDefault: false },
+      { id: '6', name: 'Finance', icon: '💡', isDefault: false },
+      { id: '7', name: 'Travel', icon: '✈️', isDefault: false },
+      { id: '8', name: 'Health', icon: '🏥', isDefault: false },
+      { id: '9', name: 'Shopping', icon: '🛒', isDefault: false },
+      { id: '10', name: 'Newsletter', icon: '📰', isDefault: false }
+    ];
   }
 
-  toggleSidebar() {
-    this.isOpen = !this.isOpen;
-  }
-
-  onMouseEnter() {
+  onMouseEnter(): void {
     this.isOpen = true;
   }
 
-  onMouseLeave() {
+  onMouseLeave(): void {
     this.isOpen = false;
+  }
+
+  navigate(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  navigateToFolder(folder: Folder): void {
+    // Navigate to folder view with folder ID
+    this.router.navigate(['folder', folder.id]);
+  }
+
+  openManageFolders(): void {
+    // Open manage folders modal or navigate to folders page
+    this.router.navigate(['folders']);
+  }
+
+  openCompose(): void {
+    // Open compose modal
+    console.log('Opening compose...');
   }
 }
