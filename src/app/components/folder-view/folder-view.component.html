@@ -1,0 +1,30 @@
+<div class="folder-view-container">
+  <div class="folder-header" *ngIf="currentFolder">
+    <div class="folder-title-section">
+      <span class="folder-icon-large">{{ currentFolder.icon }}</span>
+      <h1 class="folder-title">{{ currentFolder.name }}</h1>
+    </div>
+    <div class="folder-stats">
+      <span class="email-count">{{ emails.length }} emails</span>
+    </div>
+  </div>
+
+  <div class="email-list" *ngIf="emails.length > 0">
+    <div 
+      *ngFor="let email of emails" 
+      class="email-item"
+      [class.unread]="!email.isRead"
+    >
+      <div class="email-sender">{{ email.from }}</div>
+      <div class="email-subject">{{ email.subject }}</div>
+      <div class="email-preview">{{ email.preview }}</div>
+      <div class="email-date">{{ email.date }}</div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="emails.length === 0">
+    <div class="empty-icon">📭</div>
+    <h3>No emails in this folder</h3>
+    <p>This folder is empty</p>
+  </div>
+</div>
