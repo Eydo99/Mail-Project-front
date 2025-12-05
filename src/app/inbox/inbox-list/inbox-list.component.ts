@@ -5,6 +5,9 @@ import { EmailStateService } from '../../core/services/email-state.service';
 import { Email } from '../../core/models/email.model';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
+import{ SortCriteria} from '../../core/models/SortCriteria'
+import { FilterCriteria } from '../../core/models/FilterCriteria';
+import { EmailFilterService } from '../../core/services/email-filter.service';
 
 @Component({
   selector: 'app-inbox-list',
@@ -28,20 +31,32 @@ export class InboxListComponent implements OnInit {
   readonly Filter = Filter;
 
   allEmails: Email[] = [];
+  filteredEmails: Email[] = [];
   searchQuery: string = '';
   sortBy: string = 'date';
   selectedEmailId: string | null = null;
 
+  // ADD THESE - Sort
+  sortField: SortCriteria['field'] = 'date';
+  sortDirection: SortCriteria['direction'] = 'desc';
+  
+  // ADD THESE - Filter
+  showFilterModal: boolean = false;
+  activeFilters: FilterCriteria = {};
+  hasActiveFilters: boolean = false;
+  
+
   constructor(
     private mailService: MailService,
-    private emailStateService: EmailStateService
+    private emailStateService: EmailStateService,
+    private emailFilterService: EmailFilterService // ADD THIS
   ) {}
 
   ngOnInit(): void {
     this.mailService.getEmails().subscribe(emails => {
       this.allEmails = emails;
       this.totalItems = emails.length;
-      this.updatePagination();
+      this.applyFiltersAndSort();
     });
 
     // Track which email is selected
@@ -62,15 +77,57 @@ export class InboxListComponent implements OnInit {
 
   onSearch(query: string): void {
     this.searchQuery = query;
-    // TODO: Implement search filtering
-    // After implementing search, call this.updatePagination()
+    this.activeFilters.searchTerm = query;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
   }
 
-  onSortChange(sortBy: string): void {
-    this.sortBy = sortBy;
-    // TODO: Implement sorting
-    // After implementing sort, call this.updatePagination()
+  onSortChange(value: string): void {
+    const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
+    this.sortField = field;
+    this.sortDirection = direction;
+    this.applyFiltersAndSort();
   }
+
+  openFilterModal(): void {
+    this.showFilterModal = true;
+  }
+
+  closeFilterModal(): void {
+    this.showFilterModal = false;
+  }
+
+  onApplyFilters(criteria: FilterCriteria): void {
+    this.activeFilters = { ...this.activeFilters, ...criteria };
+    this.hasActiveFilters = Object.keys(criteria).filter(key => key !== 'searchTerm').length > 0;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
+
+  clearAllFilters(): void {
+    this.activeFilters = {};
+    this.searchQuery = '';
+    this.hasActiveFilters = false;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
+
+   applyFiltersAndSort(): void {
+    const sortCriteria: SortCriteria = {
+      field: this.sortField,
+      direction: this.sortDirection
+    };
+
+    this.filteredEmails = this.emailFilterService.processEmails(
+      this.allEmails,
+      this.activeFilters,
+      sortCriteria
+    );
+
+    this.totalItems = this.filteredEmails.length;
+    this.updatePagination();
+  }
+
 
   // Pagination methods
   onPageChange(page: number): void {
@@ -84,9 +141,9 @@ export class InboxListComponent implements OnInit {
     this.updatePagination();
   }
 
-  updatePagination(): void {
+updatePagination(): void {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
-    this.paginatedEmails = this.allEmails.slice(start, end);
+    this.paginatedEmails = this.filteredEmails.slice(start, end); // CHANGE from allEmails to filteredEmails
   }
 }

@@ -1,0 +1,69 @@
+<div class="modal-overlay" *ngIf="show" (click)="onClose()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Filter Emails</h2>
+      <button class="btn-close" (click)="onClose()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Sender Filter -->
+      <div class="form-group">
+        <label for="sender">Sender</label>
+        <input
+          id="sender"
+          type="text"
+          [(ngModel)]="sender"
+          placeholder="Filter by sender name or email"
+          class="form-input"
+        />
+      </div>
+
+      <!-- Attachment Filter -->
+      <div class="form-group">
+        <label for="hasAttachment">Has Attachment</label>
+        <select id="hasAttachment" [(ngModel)]="hasAttachment" class="form-select">
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+
+      <!-- Importance Filter -->
+      <div class="form-group">
+        <label for="importance">Importance</label>
+        <select id="importance" [(ngModel)]="importance" class="form-select">
+          <option value="all">All</option>
+          <option value="low">Low</option>
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+
+      <!-- Date Range -->
+      <div class="form-group">
+        <label for="dateFrom">Date From</label>
+        <input
+          id="dateFrom"
+          type="date"
+          [(ngModel)]="dateFrom"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="dateTo">Date To</label>
+        <input
+          id="dateTo"
+          type="date"
+          [(ngModel)]="dateTo"
+          class="form-input"
+        />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="onClearFilters()">Clear All</button>
+      <button class="btn-primary" (click)="onApplyFilters()">Apply Filters</button>
+    </div>
+  </div>
+</div>

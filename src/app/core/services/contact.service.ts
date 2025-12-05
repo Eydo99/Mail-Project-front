@@ -4,21 +4,12 @@ import { Observable } from 'rxjs';
 import { Contact } from '../models/Contact';
 import { Email } from '../models/EmailContacts';
 import { Phone } from '../models/phoneContacts';
+import { PaginatedContactResponse } from '../models/PaginatedContactResponse';
 
 export interface ContactRequest {
   name: string;
   emails: Email[];
   phones: Phone[];
-}
-
-export interface PageResponse<T> {
-  data: T[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
 }
 
 @Injectable({
@@ -31,32 +22,29 @@ export class ContactService {
 
   getAllContacts(
     page: number = 1,
-    limit: number = 10,
+    size: number = 10,
     search?: string,
     sortBy: string = 'name'
-  ): Observable<PageResponse<Contact>> {
+  ): Observable<PaginatedContactResponse> {
+
     let params = new HttpParams()
-      .set('page', page.toString())
-      .set('limit', limit.toString())
+      .set('page', (page - 1).toString()) // backend expects 0-based page index
+      .set('size', size.toString())
       .set('sortBy', sortBy);
 
-    if (search) {
+    if (search && search.trim() !== '') {
       params = params.set('search', search);
     }
 
-    return this.http.get<PageResponse<Contact>>(this.apiUrl, { params });
-  }
-
-  getContactById(id: string): Observable<Contact> {
-    return this.http.get<Contact>(`${this.apiUrl}/${id}`);
+    return this.http.get<PaginatedContactResponse>(this.apiUrl, { params });
   }
 
   createContact(request: ContactRequest): Observable<Contact> {
     return this.http.post<Contact>(this.apiUrl, request);
   }
 
-  updateContact(id: string, request: ContactRequest): Observable<Contact> {
-    return this.http.put<Contact>(`${this.apiUrl}/${id}`, request);
+  updateContact(id: string, request: ContactRequest): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, request);
   }
 
   deleteContact(id: string): Observable<void> {

@@ -27,10 +27,10 @@
     </div>
   </div>
 
-  <!-- Contacts List -->
+<!-- Contacts List -->
   <div class="contacts-list">
     <div 
-      *ngFor="let contact of paginatedContacts" 
+      *ngFor="let contact of contacts" 
       class="contact-item"
     >
       <div class="contact-avatar" [style.background-color]="contact.avatarColor">
@@ -74,7 +74,7 @@
       </div>
     </div>
 
-    <div *ngIf="paginatedContacts.length === 0 && totalItems === 0" class="no-contacts">
+    <div *ngIf="contacts.length === 0 && totalItems === 0" class="no-contacts">
       No contacts found
     </div>
   </div>

@@ -1,5 +1,5 @@
 export interface Email {
-  id: string;
+  id?: string;
   address: string;
   isPrimary: boolean;
 }
