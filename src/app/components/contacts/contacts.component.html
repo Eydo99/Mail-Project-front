@@ -88,93 +88,108 @@
     (itemsPerPageChange)="onItemsPerPageChange($event)"
   ></app-pagination>
 
-  <!-- Modal -->
-  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>{{ modalMode === 'add' ? 'Add Contact' : 'Edit Contact' }}</h2>
-        <button class="btn-close" (click)="closeModal()">&times;</button>
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ modalMode === 'add' ? 'Add Contact' : 'Edit Contact' }}</h2>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="contactName">Name <span class="required">*</span></label>
+        <input 
+          id="contactName"
+          type="text" 
+          [(ngModel)]="formName" 
+          placeholder="Enter contact name"
+          class="form-input"
+          [class.error]="validationErrors.name"
+        />
+        <div class="error-message" *ngIf="validationErrors.name">
+          {{ validationErrors.name }}
+        </div>
       </div>
 
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="contactName">Name *</label>
+      <!-- Email Addresses -->
+      <div class="form-group">
+        <label>Email Addresses <span class="required">*</span></label>
+        <div *ngFor="let email of formEmails; let i = index" class="email-field-group">
           <input 
-            id="contactName"
-            type="text" 
-            [(ngModel)]="formName" 
-            placeholder="Enter contact name"
-            class="form-input"
+            type="email" 
+            [(ngModel)]="email.address" 
+            placeholder="Enter email address"
+            class="form-input email-input"
+            [class.error]="validationErrors.emails && validationErrors.emails[i]"
           />
-        </div>
-
-        <div class="form-group">
-          <label>Email Addresses *</label>
-          <div *ngFor="let email of formEmails; let i = index" class="email-field-group">
+          <label class="primary-checkbox">
             <input 
-              type="email" 
-              [(ngModel)]="email.address" 
-              placeholder="Enter email address"
-              class="form-input email-input"
+              type="radio" 
+              [name]="'primary'" 
+              [checked]="email.isPrimary"
+              (change)="setPrimaryEmail(i)"
             />
-            <label class="primary-checkbox">
-              <input 
-                type="radio" 
-                [name]="'primary'" 
-                [checked]="email.isPrimary"
-                (change)="setPrimaryEmail(i)"
-              />
-              Primary
-            </label>
-            <button 
-              *ngIf="formEmails.length > 1"
-              class="btn-remove" 
-              (click)="removeEmailField(i)"
-              title="Remove email"
-            >
-              &times;
-            </button>
+            Primary
+          </label>
+          <button 
+            *ngIf="formEmails.length > 1"
+            class="btn-remove" 
+            (click)="removeEmailField(i)"
+            title="Remove email"
+          >
+            &times;
+          </button>
+          <div class="error-message" *ngIf="validationErrors.emails && validationErrors.emails[i]">
+            {{ validationErrors.emails[i] }}
           </div>
-          <button class="btn-add-email" (click)="addEmailField()">+ Add Email</button>
         </div>
-
-        <div class="form-group">
-          <label>Phone Numbers</label>
-          <div *ngFor="let phone of formPhones; let i = index" class="email-field-group">
-            <input 
-              type="tel" 
-              [(ngModel)]="phone.number" 
-              placeholder="Enter phone number"
-              class="form-input email-input"
-            />
-            <label class="primary-checkbox">
-              <input 
-                type="radio" 
-                [name]="'primaryPhone'" 
-                [checked]="phone.isPrimary"
-                (change)="setPrimaryPhone(i)"
-              />
-              Primary
-            </label>
-            <button 
-              *ngIf="formPhones.length > 1"
-              class="btn-remove" 
-              (click)="removePhoneField(i)"
-              title="Remove phone"
-            >
-              &times;
-            </button>
-          </div>
-          <button class="btn-add-email" (click)="addPhoneField()">+ Add Phone</button>
-        </div>
+        <button class="btn-add-email" (click)="addEmailField()">+ Add Email</button>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeModal()">Cancel</button>
-        <button class="btn-primary" (click)="saveContact()">
-          {{ modalMode === 'add' ? 'Add Contact' : 'Save Changes' }}
-        </button>
+      <!-- Phone Numbers -->
+      <div class="form-group">
+        <label>Phone Numbers</label>
+        <div *ngFor="let phone of formPhones; let i = index" class="email-field-group">
+          <input 
+            type="tel" 
+            [(ngModel)]="phone.number" 
+            placeholder="Enter phone number"
+            class="form-input email-input"
+            [class.error]="validationErrors.phones && validationErrors.phones[i]"
+          />
+          <label class="primary-checkbox">
+            <input 
+              type="radio" 
+              [name]="'primaryPhone'" 
+              [checked]="phone.isPrimary"
+              (change)="setPrimaryPhone(i)"
+            />
+            Primary
+          </label>
+          <button 
+            *ngIf="formPhones.length > 1"
+            class="btn-remove" 
+            (click)="removePhoneField(i)"
+            title="Remove phone"
+          >
+            &times;
+          </button>
+          <div class="error-message" *ngIf="validationErrors.phones && validationErrors.phones[i]">
+            {{ validationErrors.phones[i] }}
+          </div>
+        </div>
+        <button class="btn-add-email" (click)="addPhoneField()">+ Add Phone</button>
       </div>
     </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeModal()">Cancel</button>
+      <button class="btn-primary" (click)="saveContact()">
+        {{ modalMode === 'add' ? 'Add Contact' : 'Save Changes' }}
+      </button>
+    </div>
   </div>
+</div>
 </div>

@@ -416,4 +416,60 @@
     width: 100%;
     flex-basis: 100%;
   }
+
+  /* Add these styles to your existing CSS file */
+
+/* Required field indicator */
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+/* Error state for inputs */
+.form-input.error,
+.email-input.error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2;
+}
+
+.form-input.error:focus,
+.email-input.error:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Error message styling */
+.error-message {
+  display: block;
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  margin-left: 0.25rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Adjust email field group to accommodate error messages */
+.email-field-group {
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.email-field-group > div:first-child {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
 }
