@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Email } from '../models/email.model';
 
 @Injectable({
@@ -9,26 +9,23 @@ import { Email } from '../models/email.model';
 export class MailService {
   private apiUrl = 'http://localhost:8080/api/mail';
 
-  private emailsSubject = new BehaviorSubject<Email[]>([]);
-  public emails$: Observable<Email[]> = this.emailsSubject.asObservable();
+  // Separate subjects for each folder
+  private inboxEmailsSubject = new BehaviorSubject<Email[]>([]);
+  private sentEmailsSubject = new BehaviorSubject<Email[]>([]);
+  private draftEmailsSubject = new BehaviorSubject<Email[]>([]);
+  private trashEmailsSubject = new BehaviorSubject<Email[]>([]);
+
+  // Public observables
+  public inboxEmails$ = this.inboxEmailsSubject.asObservable();
+  public sentEmails$ = this.sentEmailsSubject.asObservable();
+  public draftEmails$ = this.draftEmailsSubject.asObservable();
+  public trashEmails$ = this.trashEmailsSubject.asObservable();
+
+  // Keep for backward compatibility
+  public emails$ = this.inboxEmails$;
 
   constructor(private http: HttpClient) {
     this.loadInboxEmails();
-  }
-
-  /**
-   * Load inbox emails from backend
-   */
-  private loadInboxEmails(): void {
-    this.http.get<any[]>(`${this.apiUrl}/inbox`).subscribe({
-      next: (emails) => {
-        const mappedEmails = this.mapBackendToFrontend(emails);
-        this.emailsSubject.next(mappedEmails);
-      },
-      error: (error) => {
-        console.error('Error loading emails:', error);
-      }
-    });
   }
 
   /**
@@ -60,50 +57,96 @@ export class MailService {
   }
 
   /**
-   * Get all emails (returns observable)
+   * Load inbox emails from backend
    */
-  getEmails(): Observable<Email[]> {
-    return this.emails$;
+  private loadInboxEmails(): void {
+    this.http.get<any[]>(`${this.apiUrl}/inbox`).subscribe({
+      next: (emails) => {
+        const mappedEmails = this.mapBackendToFrontend(emails);
+        this.inboxEmailsSubject.next(mappedEmails);
+      },
+      error: (error) => {
+        console.error('Error loading inbox emails:', error);
+      }
+    });
   }
 
   /**
-   * Refresh emails from backend
+   * Get emails for a specific folder (returns observable)
    */
-  refreshEmails(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/inbox`).pipe(
+  getEmails(folder: string = 'inbox'): Observable<Email[]> {
+    switch(folder) {
+      case 'inbox':
+        return this.inboxEmails$;
+      case 'sent':
+        return this.sentEmails$;
+      case 'draft':
+        return this.draftEmails$;
+      case 'trash':
+        return this.trashEmails$;
+      default:
+        return this.inboxEmails$;
+    }
+  }
+
+  /**
+   * Refresh emails for a specific folder
+   */
+  refreshFolder(folder: string): Observable<Email[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${folder}`).pipe(
+      map(emails => this.mapBackendToFrontend(emails)),
       tap(emails => {
-        const mappedEmails = this.mapBackendToFrontend(emails);
-        this.emailsSubject.next(mappedEmails);
+        switch(folder) {
+          case 'inbox':
+            this.inboxEmailsSubject.next(emails);
+            break;
+          case 'sent':
+            this.sentEmailsSubject.next(emails);
+            break;
+          case 'draft':
+            this.draftEmailsSubject.next(emails);
+            break;
+          case 'trash':
+            this.trashEmailsSubject.next(emails);
+            break;
+        }
       })
     );
   }
 
   /**
-   * Get inbox emails
+   * Get inbox emails with mapping
    */
-  getInboxEmails(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/inbox`);
+  getInboxEmails(): Observable<Email[]> {
+    return this.refreshFolder('inbox');
   }
 
   /**
-   * Get sent emails
+   * Get sent emails with mapping
    */
-  getSentEmails(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/sent`);
+  getSentEmails(): Observable<Email[]> {
+    return this.refreshFolder('sent');
   }
 
   /**
-   * Get draft emails
+   * Get draft emails with mapping
    */
-  getDraftEmails(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/draft`);
+  getDraftEmails(): Observable<Email[]> {
+    return this.refreshFolder('draft');
   }
 
   /**
-   * Get trash emails
+   * Get trash emails with mapping
    */
-  getTrashEmails(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/trash`);
+  getTrashEmails(): Observable<Email[]> {
+    return this.refreshFolder('trash');
+  }
+
+  /**
+   * Refresh emails from backend (backward compatibility)
+   */
+  refreshEmails(): Observable<Email[]> {
+    return this.getInboxEmails();
   }
 
   /**
@@ -116,21 +159,22 @@ export class MailService {
   /**
    * Toggle star status
    */
-  toggleStar(emailId: string): void {
-    const emails = this.emailsSubject.value;
+  toggleStar(emailId: string, folder: string = 'inbox'): void {
+    const subject = this.getSubjectByFolder(folder);
+    const emails = subject.value;
     const email = emails.find(e => e.id === emailId);
 
     if (email) {
       // Optimistic update
       email.isStarred = !email.isStarred;
-      this.emailsSubject.next([...emails]);
+      subject.next([...emails]);
 
       // Call backend
-      this.http.put(`${this.apiUrl}/${emailId}/star?folder=inbox`, {}).subscribe({
+      this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}).subscribe({
         error: (error) => {
           // Revert on error
           email.isStarred = !email.isStarred;
-          this.emailsSubject.next([...emails]);
+          subject.next([...emails]);
           console.error('Error toggling star:', error);
         }
       });
@@ -141,11 +185,10 @@ export class MailService {
    * Mark email as read
    */
   markAsRead(emailId: string): void {
-    // This can be implemented when you add isRead field to your backend
-    const emails = this.emailsSubject.value;
+    const emails = this.inboxEmailsSubject.value;
     const email = emails.find(e => e.id === emailId);
     if (email) {
-      this.emailsSubject.next([...emails]);
+      this.inboxEmailsSubject.next([...emails]);
     }
   }
 
@@ -160,6 +203,36 @@ export class MailService {
    * Delete an email
    */
   deleteEmail(emailId: string, folder: string): Observable<string> {
-    return this.http.delete<string>(`${this.apiUrl}/${emailId}?folder=${folder}`);
+    return this.http.delete(`${this.apiUrl}/${emailId}?folder=${folder}`, {
+      responseType: 'text'  // Add this option
+    });
+  }
+
+  /**
+   * Move email to another folder
+   */
+  moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
+    return this.http.put<string>(
+      `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
+      {}
+    );
+  }
+
+  /**
+   * Get the BehaviorSubject for a specific folder
+   */
+  private getSubjectByFolder(folder: string): BehaviorSubject<Email[]> {
+    switch(folder) {
+      case 'inbox':
+        return this.inboxEmailsSubject;
+      case 'sent':
+        return this.sentEmailsSubject;
+      case 'draft':
+        return this.draftEmailsSubject;
+      case 'trash':
+        return this.trashEmailsSubject;
+      default:
+        return this.inboxEmailsSubject;
+    }
   }
 }

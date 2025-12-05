@@ -1,5 +1,5 @@
 <div class="inbox-container">
-  <!-- Action Bar (appears when emails are selected) -->
+  <!-- Action Bar -->
   <div class="action-bar" *ngIf="showActionBar">
     <div class="action-bar-content">
       <div class="action-bar-left">
@@ -9,20 +9,19 @@
       <div class="action-bar-center">
         <button class="action-btn delete-btn" (click)="deleteSelectedEmails()">
           <lucide-icon [img]="Trash2" class="action-icon"></lucide-icon>
-          Delete
+          Delete Permanently
         </button>
 
         <select class="folder-dropdown" [(ngModel)]="moveToFolder" (change)="onFolderChange(moveToFolder)">
-          <option value="" disabled selected>Choose folder...</option>
-          <option value="inbox" *ngIf="folderName !== 'inbox'">Inbox</option>
-          <option value="sent" *ngIf="folderName !== 'sent'">Sent</option>
-          <option value="draft" *ngIf="folderName !== 'draft'">Draft</option>
-          <option value="trash" *ngIf="folderName !== 'trash'">Trash</option>
+          <option value="" disabled selected>Restore to...</option>
+          <option value="inbox">Inbox</option>
+          <option value="sent">Sent</option>
+          <option value="draft">Draft</option>
         </select>
 
         <button class="action-btn move-btn" (click)="moveSelectedEmails()" [disabled]="!moveToFolder">
           <lucide-icon [img]="FolderInput" class="action-icon"></lucide-icon>
-          Move
+          Restore
         </button>
       </div>
 
@@ -85,7 +84,6 @@
         <div class="email-header">
           <span class="email-sender">{{ email.sender }}</span>
 
-          <!-- Star Icon -->
           <lucide-icon
             [img]="Star"
             [class.starred]="email.isStarred"
@@ -93,14 +91,12 @@
             (click)="toggleStar($event, email)"
           ></lucide-icon>
 
-          <!-- Attachment Icon -->
           <lucide-icon
             *ngIf="email.hasAttachment"
             [img]="Paperclip"
             class="icon attachment-icon"
           ></lucide-icon>
 
-          <!-- Urgent Icon -->
           <lucide-icon
             *ngIf="email.priority <= 2"
             [img]="AlertCircle"
@@ -119,7 +115,8 @@
 
     <!-- Empty State -->
     <div *ngIf="paginatedEmails.length === 0" class="empty-state">
-      <p class="empty-message">No emails found</p>
+      <lucide-icon [img]="Trash2" class="empty-icon"></lucide-icon>
+      <p class="empty-message">Trash is empty</p>
     </div>
   </div>
 
