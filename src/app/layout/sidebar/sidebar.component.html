@@ -52,11 +52,15 @@
             <span class="label kalam">Trash</span>
           </button>
         </li>
-      </ul>
 
-      <div class="folders-label cherry">Folders</div>
-      <ul class="folder-list">
-        <!-- Folder items go here -->
+        <!-- Folders Navigation Item -->
+        <li class="nav-item">
+          <button class="nav-btn" (click)="navigate('folders')">
+            <lucide-icon [img]="FolderOpen" class="nav-icon"></lucide-icon>
+            <span class="label kalam">Folders</span>
+            <span class="folder-badge" *ngIf="totalFolderCount > 0">{{ totalFolderCount }}</span>
+          </button>
+        </li>
       </ul>
     </nav>
 
