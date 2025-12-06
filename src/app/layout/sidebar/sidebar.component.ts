@@ -1,14 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen,Folder } from 'lucide-angular';
-
-export interface Folder {
-  id: string;
-  name: string;
-  icon: string;
-  isDefault?: boolean;
-}
+import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen } from 'lucide-angular';
+import { FolderService } from '../../core/services/folder.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -28,32 +22,20 @@ export class SidebarComponent implements OnInit {
   Settings = Settings;
   Plus = Plus;
   FolderOpen = FolderOpen;
-  folder=Folder;
 
   isOpen = true;
-  folders: Folder[] = [];
-  showFolderModal = false;
+  totalFolderCount = 0;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private folderService: FolderService
+  ) {}
 
   ngOnInit(): void {
-    this.loadFolders();
-  }
-
-  loadFolders(): void {
-    // Mock folders
-    this.folders = [
-      { id: '1', name: 'Work', icon: '💼', isDefault: true },
-      { id: '2', name: 'Personal', icon: '👤', isDefault: true },
-      { id: '3', name: 'Projects', icon: '📋', isDefault: false },
-      { id: '4', name: 'Important', icon: '⭐', isDefault: false },
-      { id: '5', name: 'Family', icon: '🏠', isDefault: false },
-      { id: '6', name: 'Finance', icon: '💡', isDefault: false },
-      { id: '7', name: 'Travel', icon: '✈️', isDefault: false },
-      { id: '8', name: 'Health', icon: '🏥', isDefault: false },
-      { id: '9', name: 'Shopping', icon: '🛒', isDefault: false },
-      { id: '10', name: 'Newsletter', icon: '📰', isDefault: false }
-    ];
+    // Load total folder count for badge
+    this.folderService.getAllFolders().subscribe(folders => {
+      this.totalFolderCount = folders.length;
+    });
   }
 
   onMouseEnter(): void {
@@ -68,18 +50,7 @@ export class SidebarComponent implements OnInit {
     this.router.navigate([route]);
   }
 
-  navigateToFolder(folder: Folder): void {
-    // Navigate to folder view with folder ID
-    this.router.navigate(['folder', folder.id]);
-  }
-
-  openManageFolders(): void {
-    // Open manage folders modal or navigate to folders page
-    this.router.navigate(['folders']);
-  }
-
   openCompose(): void {
-    // Open compose modal
     console.log('Opening compose...');
   }
 }
