@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen,Folder } from 'lucide-angular';
-
+import { ComposeService } from '../../core/services/compose.service';
 export interface Folder {
   id: string;
   name: string;
@@ -34,7 +34,10 @@ export class SidebarComponent implements OnInit {
   folders: Folder[] = [];
   showFolderModal = false;
 
-  constructor(private router: Router) {}
+  constructor(
+  private router: Router,
+  private composeService: ComposeService
+) {}
 
   ngOnInit(): void {
     this.loadFolders();
@@ -79,7 +82,6 @@ export class SidebarComponent implements OnInit {
   }
 
   openCompose(): void {
-    // Open compose modal
-    console.log('Opening compose...');
-  }
+  this.composeService.openCompose();
+}
 }
