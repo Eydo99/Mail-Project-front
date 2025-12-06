@@ -7,9 +7,6 @@ import { Contact } from '../../core/models/Contact';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { ContactRequest, ContactService } from '../../core/services/contact.service';
 
-
-
-
 @Component({
   selector: 'app-contacts',
   standalone: true,
@@ -17,7 +14,6 @@ import { ContactRequest, ContactService } from '../../core/services/contact.serv
   templateUrl: './contacts.component.html',
   styleUrls: ['./contacts.component.css']
 })
-
 export class ContactsComponent implements OnInit {
   constructor(private contactService: ContactService) {}
   
@@ -44,12 +40,10 @@ export class ContactsComponent implements OnInit {
     phones?: { [index: number]: string };
   } = {};
 
-
   ngOnInit(): void {
     console.log('Component initialized');
     this.loadContacts();
   }
-
 
   loadContacts(): void {
     console.log('Loading contacts...', {
@@ -97,25 +91,34 @@ export class ContactsComponent implements OnInit {
     this.loadContacts();
   }
 
-
   openAddModal(): void {
     this.modalMode = 'add';
     this.resetForm();
     this.showModal = true;
   }
 
-  openEditModal(contact: Contact): void {
-    this.modalMode = 'edit';
-    this.selectedContact = contact;
-    this.formName = contact.name;
-    this.formEmails = contact.emails && contact.emails.length > 0 
-      ? contact.emails.map(e => ({ ...e }))
-      : [{ address: '', isPrimary: true }];
-    this.formPhones = contact.phones && contact.phones.length > 0
-      ? contact.phones.map(p => ({ ...p }))
-      : [{ number: '', isPrimary: true }];
-    this.showModal = true;
-  }
+ openEditModal(contact: Contact): void {
+  this.modalMode = 'edit';
+  this.selectedContact = contact;
+  this.formName = contact.name;
+  
+  // Explicitly map isPrimary
+  this.formEmails = contact.emails && contact.emails.length > 0 
+    ? contact.emails.map(e => ({ 
+        address: e.address, 
+        isPrimary: e.isPrimary 
+      }))
+    : [{ address: '', isPrimary: true }];
+    
+  this.formPhones = contact.phones && contact.phones.length > 0
+    ? contact.phones.map(p => ({ 
+        number: p.number, 
+        isPrimary: p.isPrimary 
+      }))
+    : [{ number: '', isPrimary: true }];
+    
+  this.showModal = true;
+}
 
   closeModal(): void {
     this.showModal = false;
@@ -139,18 +142,22 @@ export class ContactsComponent implements OnInit {
 
   removeEmailField(index: number): void {
     if (this.formEmails.length > 1) {
+      const wasRemovingPrimary = this.formEmails[index].isPrimary;
       this.formEmails.splice(index, 1);
-      // Ensure at least one email is primary
-      if (!this.formEmails.some(e => e.isPrimary)) {
+      
+      // If we removed the primary email, make the first one primary
+      if (wasRemovingPrimary && this.formEmails.length > 0) {
         this.formEmails[0].isPrimary = true;
       }
     }
   }
 
   setPrimaryEmail(index: number): void {
+    console.log('Setting primary email at index:', index);
     this.formEmails.forEach((email, i) => {
       email.isPrimary = i === index;
     });
+    console.log('Updated form emails:', this.formEmails);
   }
 
   addPhoneField(): void {
@@ -162,18 +169,22 @@ export class ContactsComponent implements OnInit {
 
   removePhoneField(index: number): void {
     if (this.formPhones.length > 1) {
+      const wasRemovingPrimary = this.formPhones[index].isPrimary;
       this.formPhones.splice(index, 1);
-      // Ensure at least one phone is primary
-      if (!this.formPhones.some(p => p.isPrimary)) {
+      
+      // If we removed the primary phone, make the first one primary
+      if (wasRemovingPrimary && this.formPhones.length > 0) {
         this.formPhones[0].isPrimary = true;
       }
     }
   }
 
   setPrimaryPhone(index: number): void {
+    console.log('Setting primary phone at index:', index);
     this.formPhones.forEach((phone, i) => {
       phone.isPrimary = i === index;
     });
+    console.log('Updated form phones:', this.formPhones);
   }
 
   saveContact(): void {
@@ -185,11 +196,27 @@ export class ContactsComponent implements OnInit {
       return;
     }
 
+    // Filter out empty fields while preserving isPrimary
+    const validEmails = this.formEmails.filter(e => e.address.trim() !== '');
+    const validPhones = this.formPhones.filter(p => p.number.trim() !== '');
+
+    // Ensure at least one email is primary
+    if (validEmails.length > 0 && !validEmails.some(e => e.isPrimary)) {
+      validEmails[0].isPrimary = true;
+    }
+
+    // Ensure at least one phone is primary (if phones exist)
+    if (validPhones.length > 0 && !validPhones.some(p => p.isPrimary)) {
+      validPhones[0].isPrimary = true;
+    }
+
     const payload: ContactRequest = {
       name: this.formName.trim(),
-      emails: this.formEmails.filter(e => e.address.trim() !== ''),
-      phones: this.formPhones.filter(p => p.number.trim() !== '')
+      emails: validEmails,
+      phones: validPhones
     };
+
+    console.log('Saving contact with payload:', payload);
 
     if (this.modalMode === 'add') {
       this.contactService.createContact(payload).subscribe({
@@ -299,5 +326,14 @@ export class ContactsComponent implements OnInit {
         this.loadContacts();
       });
     }
+  }
+
+  // TrackBy functions to prevent Angular from recreating DOM elements
+  trackByEmailIndex(index: number, item: Email): number {
+    return index;
+  }
+
+  trackByPhoneIndex(index: number, item: Phone): number {
+    return index;
   }
 }
