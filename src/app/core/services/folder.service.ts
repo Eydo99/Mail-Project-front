@@ -1,147 +1,175 @@
-// folder.service.ts
+// app/core/services/folder.service.ts
+// Refactored to match contact service pattern - NO CACHING
+
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
-import { FolderData } from '../../components/folder-modal/folder-modal.component';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Email } from '../models/email.model';
+
+export interface FolderData {
+  id?: string;
+  name: string;
+  description?: string;
+  color: string;
+  emailCount?: number;
+}
+
+export interface FolderRequest {
+  name: string;
+  description?: string;
+  color: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class FolderService {
-  private foldersSubject = new BehaviorSubject<FolderData[]>([]);
-  public folders$ = this.foldersSubject.asObservable();
+  private apiUrl = 'http://localhost:8080/api/folders';
+  private emailApiUrl = 'http://localhost:8080/api/emails';
 
-  constructor() {
-    this.initializeFolders();
-  }
-
-  /**
-   * Initialize with some default folders
-   */
-  private initializeFolders(): void {
-    const defaultFolders: FolderData[] = [
-      {
-        id: 'folder-1',
-        name: 'Work',
-        description: 'Work-related emails',
-        color: '#3b82f6',
-        emailCount: 42
-      },
-      {
-        id: 'folder-2',
-        name: 'Personal',
-        description: 'Personal correspondence',
-        color: '#8b5cf6',
-        emailCount: 28
-      },
-      {
-        id: 'folder-3',
-        name: 'Projects',
-        description: 'Project updates and discussions',
-        color: '#10b981',
-        emailCount: 15
-      }
-    ];
-
-    this.foldersSubject.next(defaultFolders);
-  }
+  constructor(private http: HttpClient) {}
 
   /**
    * Get all folders
+   * GET /api/folders
    */
   getAllFolders(): Observable<FolderData[]> {
-    return this.folders$;
+    return this.http.get<FolderData[]>(this.apiUrl);
   }
 
   /**
    * Get folder by ID
+   * GET /api/folders/{id}
    */
-  getFolderById(folderId: string): Observable<FolderData | undefined> {
-    return this.folders$.pipe(
-      map(folders => folders.find(f => f.id === folderId))
-    );
+  getFolderById(folderId: string): Observable<FolderData> {
+    return this.http.get<FolderData>(`${this.apiUrl}/${folderId}`);
   }
 
   /**
-   * Create a new folder
+   * Create new folder
+   * POST /api/folders
    */
-  createFolder(folderData: FolderData): Observable<FolderData> {
-    return of(folderData).pipe(
-      delay(300), // Simulate API delay
-      map(data => {
-        const newFolder: FolderData = {
-          ...data,
-          id: `folder-${Date.now()}`,
-          emailCount: 0
-        };
-
-        const currentFolders = this.foldersSubject.value;
-        this.foldersSubject.next([...currentFolders, newFolder]);
-
-        return newFolder;
-      })
-    );
+  createFolder(request: FolderRequest): Observable<FolderData> {
+    return this.http.post<FolderData>(this.apiUrl, request);
   }
 
   /**
-   * Update an existing folder
+   * Update folder
+   * PUT /api/folders/{id}
    */
-  updateFolder(folderData: FolderData): Observable<FolderData> {
-    return of(folderData).pipe(
-      delay(300),
-      map(data => {
-        const currentFolders = this.foldersSubject.value;
-        const updatedFolders = currentFolders.map(folder =>
-          folder.id === data.id ? { ...folder, ...data } : folder
-        );
-
-        this.foldersSubject.next(updatedFolders);
-        return data;
-      })
-    );
+  updateFolder(folderId: string, request: FolderRequest): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${folderId}`, request);
   }
 
   /**
-   * Delete a folder
-   * In a real app, this would also move all emails back to inbox
+   * Delete folder
+   * DELETE /api/folders/{id}
    */
-  deleteFolder(folderId: string): Observable<boolean> {
-    return of(true).pipe(
-      delay(300),
-      map(() => {
-        const currentFolders = this.foldersSubject.value;
-        const filteredFolders = currentFolders.filter(f => f.id !== folderId);
-        this.foldersSubject.next(filteredFolders);
-        return true;
-      })
-    );
+  deleteFolder(folderId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${folderId}`);
+  }
+
+  /**
+   * Get all emails in a folder
+   * GET /api/folders/{id}/emails
+   */
+  getEmailsByFolder(folderId: string): Observable<Email[]> {
+    return this.http.get<Email[]>(`${this.apiUrl}/${folderId}/emails`);
   }
 
   /**
    * Update folder email count
+   * PATCH /api/folders/{id}/count
    */
-  updateFolderCount(folderId: string, count: number): void {
-    const currentFolders = this.foldersSubject.value;
-    const updatedFolders = currentFolders.map(folder =>
-      folder.id === folderId ? { ...folder, emailCount: count } : folder
-    );
-    this.foldersSubject.next(updatedFolders);
+  updateFolderCount(folderId: string, count: number): Observable<void> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.patch<void>(`${this.apiUrl}/${folderId}/count`, { count }, { headers });
   }
 
   /**
    * Increment folder email count
+   * PATCH /api/folders/{id}/increment
    */
-  incrementFolderCount(folderId: string, increment: number = 1): void {
-    const currentFolders = this.foldersSubject.value;
-    const updatedFolders = currentFolders.map(folder => {
-      if (folder.id === folderId) {
-        return {
-          ...folder,
-          emailCount: (folder.emailCount || 0) + increment
-        };
+  incrementFolderCount(folderId: string, increment: number): Observable<void> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.patch<void>(`${this.apiUrl}/${folderId}/increment`, { increment }, { headers });
+  }
+
+  /**
+   * Move email to custom folder
+   * PUT /api/emails/{id}/move
+   */
+  moveEmailToFolder(emailId: string, fromFolder: string, toFolderId: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
+    
+    return this.http.put(
+      `${this.emailApiUrl}/${emailId}/move`,
+      { fromFolder, toFolder },
+      { headers }
+    );
+  }
+
+  /**
+   * Bulk move emails to folder
+   * PUT /api/emails/bulk-move
+   */
+  bulkMoveToFolder(emailIds: string[], fromFolder: string, toFolderId: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
+    
+    return this.http.put(
+      `${this.emailApiUrl}/bulk-move`,
+      { emailIds, fromFolder, toFolder },
+      { headers }
+    );
+  }
+
+  /**
+   * Delete email from custom folder
+   * DELETE /api/emails/{id}?folder=folder_123
+   */
+  deleteEmailFromFolder(emailId: string, folderId: string): Observable<any> {
+    const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
+    const params = new HttpParams().set('folder', folder);
+    
+    return this.http.delete(`${this.emailApiUrl}/${emailId}`, { params });
+  }
+
+  /**
+   * Bulk delete emails from folder
+   * DELETE /api/emails/bulk-delete
+   */
+  bulkDeleteFromFolder(emailIds: string[], folderId: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
+    
+    return this.http.request(
+      'delete',
+      `${this.emailApiUrl}/bulk-delete`,
+      {
+        headers,
+        body: { emailIds, folderId: folder }
       }
-      return folder;
-    });
-    this.foldersSubject.next(updatedFolders);
+    );
+  }
+
+  /**
+   * Mark email as read in folder
+   */
+  markAsRead(emailId: string): Observable<any> {
+    return this.http.patch(`${this.emailApiUrl}/${emailId}/read`, {});
+  }
+
+  /**
+   * Toggle star on email in folder
+   */
+  toggleStar(emailId: string, folderId?: string): Observable<any> {
+    let params = new HttpParams();
+    if (folderId) {
+      params = params.set('folderId', folderId);
+    }
+    
+    return this.http.patch(`${this.emailApiUrl}/${emailId}/star`, {}, { params });
   }
 }

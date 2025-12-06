@@ -81,7 +81,14 @@ export class FoldersPageComponent implements OnInit {
 
   onFolderSave(folderData: FolderData): void {
     if (this.folderModalMode === 'create') {
-      this.folderService.createFolder(folderData).subscribe({
+      // CREATE: Pass only the request data (name, description, color)
+      const request = {
+        name: folderData.name,
+        description: folderData.description,
+        color: folderData.color
+      };
+      
+      this.folderService.createFolder(request).subscribe({
         next: (newFolder) => {
           this.loadFolders();
           this.closeFolderModal();
@@ -93,11 +100,24 @@ export class FoldersPageComponent implements OnInit {
         }
       });
     } else {
-      this.folderService.updateFolder(folderData).subscribe({
-        next: (updatedFolder) => {
+      // UPDATE: Pass folder ID and request data separately
+      if (!folderData.id) {
+        console.error('Cannot update folder without ID');
+        alert('Failed to update folder: Missing ID');
+        return;
+      }
+
+      const request = {
+        name: folderData.name,
+        description: folderData.description,
+        color: folderData.color
+      };
+      
+      this.folderService.updateFolder(folderData.id, request).subscribe({
+        next: () => {
           this.loadFolders();
           this.closeFolderModal();
-          alert(`Folder "${updatedFolder.name}" updated successfully!`);
+          alert(`Folder "${folderData.name}" updated successfully!`);
         },
         error: (error) => {
           console.error('Error updating folder:', error);
