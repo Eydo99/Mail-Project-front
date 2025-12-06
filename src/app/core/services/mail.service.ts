@@ -195,9 +195,24 @@ export class MailService {
   /**
    * Compose/send a new email
    */
-  composeMail(email: any): Observable<string> {
-    return this.http.post<string>(`${this.apiUrl}/compose`, email);
-  }
+ /**
+ * Compose/send a new email
+ */
+composeMail(email: any): Observable<string> {
+  return this.http.post(`${this.apiUrl}/compose`, email, {
+    responseType: 'text'
+  });
+}
+
+/**
+ * Save email as draft
+ */
+saveDraft(email: any): Observable<string> {
+  return this.http.post(`${this.apiUrl}/draft/save`, email, {
+    responseType: 'text'
+  });
+}
+
 
   /**
    * Delete an email

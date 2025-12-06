@@ -51,6 +51,8 @@ export class SidebarComponent implements OnInit {
   }
 
   openCompose(): void {
+  this.composeService.openCompose();
+}
     console.log('Opening compose...');
   }
 }
