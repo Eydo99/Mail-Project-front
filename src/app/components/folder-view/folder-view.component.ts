@@ -1,88 +1,285 @@
+// folder-view.component.ts - Modified for backend
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-
-export interface Folder {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-export interface Email {
-  id: string;
-  from: string;
-  subject: string;
-  preview: string;
-  date: string;
-  isRead: boolean;
-}
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MailService } from '../../core/services/mail.service';
+import { FolderService } from '../../core/services/folder.service';
+import { EmailStateService } from '../../core/services/email-state.service';
+import { EmailFilterService } from '../../core/services/email-filter.service';
+import { Email } from '../../core/models/email.model';
+import { SortCriteria } from '../../core/models/SortCriteria';
+import { FilterCriteria } from '../../core/models/FilterCriteria';
+import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X, Edit, ArrowLeft } from 'lucide-angular';
+import { PaginationComponent } from "../../components/pagination/pagination.component";
 
 @Component({
   selector: 'app-folder-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent],
   templateUrl: './folder-view.component.html',
   styleUrls: ['./folder-view.component.css']
 })
 export class FolderViewComponent implements OnInit {
   folderId: string = '';
-  currentFolder: Folder | null = null;
-  emails: Email[] = [];
+  folderName: string = '';
+  folderDescription: string = '';
+  folderColor: string = '#3b82f6';
 
-  folders: Folder[] = [
-    { id: '1', name: 'Work', icon: '💼' },
-    { id: '2', name: 'Personal', icon: '👤' },
-    { id: '3', name: 'Projects', icon: '📋' },
-    { id: '4', name: 'Important', icon: '⭐' },
-    { id: '5', name: 'Family', icon: '🏠' },
-    { id: '6', name: 'Finance', icon: '💡' },
-    { id: '7', name: 'Travel', icon: '✈️' },
-    { id: '8', name: 'Health', icon: '🏥' },
-    { id: '9', name: 'Shopping', icon: '🛒' },
-    { id: '10', name: 'Newsletter', icon: '📰' }
-  ];
+  // Pagination
+  paginatedEmails: Email[] = [];
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalItems: number = 0;
 
-  constructor(private route: ActivatedRoute) {}
+  // Icons
+  readonly Star = Star;
+  readonly Paperclip = Paperclip;
+  readonly AlertCircle = AlertCircle;
+  readonly Filter = Filter;
+  readonly Trash2 = Trash2;
+  readonly FolderInput = FolderInput;
+  readonly X = X;
+  readonly Edit = Edit;
+  readonly ArrowLeft = ArrowLeft;
+
+  allEmails: Email[] = [];
+  filteredEmails: Email[] = [];
+  searchQuery: string = '';
+  selectedEmailId: string | null = null;
+
+  // Sort & Filter
+  sortField: SortCriteria['field'] = 'date';
+  sortDirection: SortCriteria['direction'] = 'desc';
+  showFilterModal: boolean = false;
+  activeFilters: FilterCriteria = {};
+
+  // Selection
+  selectedEmails: Set<string> = new Set();
+  showActionBar: boolean = false;
+  moveToFolder: string = '';
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private mailService: MailService, // Existing mail service
+    private folderService: FolderService, // New folder service
+    private emailStateService: EmailStateService,
+    private emailFilterService: EmailFilterService
+  ) {}
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.folderId = params['id'];
-      this.loadFolder();
+      this.loadFolderDetails();
       this.loadEmails();
+    });
+
+    this.emailStateService.selectedEmail$.subscribe(email => {
+      this.selectedEmailId = email?.id || null;
     });
   }
 
-  loadFolder(): void {
-    this.currentFolder = this.folders.find(f => f.id === this.folderId) || null;
+  /**
+   * Load folder metadata from backend using FolderService
+   */
+  loadFolderDetails(): void {
+    this.folderService.getFolderById(this.folderId).subscribe({
+      next: (folder) => {
+        if (folder) {
+          this.folderName = folder.name;
+          this.folderDescription = folder.description || '';
+          this.folderColor = folder.color;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading folder details:', error);
+        alert('Failed to load folder details');
+      }
+    });
   }
 
+  /**
+   * Load emails from backend for this folder using FolderService
+   */
   loadEmails(): void {
-    // Mock emails for the folder
-    this.emails = [
-      {
-        id: '1',
-        from: 'john@example.com',
-        subject: 'Meeting Tomorrow',
-        preview: 'Hi, just confirming our meeting tomorrow at 2 PM...',
-        date: '2024-01-15',
-        isRead: false
+    this.folderService.getEmailsByFolder(this.folderId).subscribe({
+      next: (emails) => {
+        this.allEmails = emails;
+        this.applyFiltersAndSort();
       },
-      {
-        id: '2',
-        from: 'sarah@company.com',
-        subject: 'Project Update',
-        preview: 'Here is the latest update on the project progress...',
-        date: '2024-01-14',
-        isRead: true
-      },
-      {
-        id: '3',
-        from: 'team@notifications.com',
-        subject: 'Weekly Report',
-        preview: 'Your weekly summary is ready to review...',
-        date: '2024-01-13',
-        isRead: true
+      error: (error) => {
+        console.error('Error loading emails:', error);
+        alert('Failed to load emails');
       }
-    ];
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/folders']);
+  }
+
+  editFolder(): void {
+    this.router.navigate(['/folders'], { queryParams: { edit: this.folderId } });
+  }
+
+  onEmailClick(email: Email): void {
+    // Use FolderService for marking as read (no folder parameter needed)
+    this.folderService.markAsRead(email.id).subscribe();
+    this.emailStateService.selectEmail(email);
+  }
+
+  toggleStar(event: Event, email: Email): void {
+    event.stopPropagation();
+    // Use FolderService with folder ID
+    this.folderService.toggleStar(email.id, this.folderId).subscribe({
+      next: () => {
+        email.isStarred = !email.isStarred;
+      },
+      error: (error) => {
+        console.error('Error toggling star:', error);
+      }
+    });
+  }
+
+  onSearch(query: string): void {
+    this.searchQuery = query;
+    this.activeFilters.searchTerm = query;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
+
+  onSortChange(value: string): void {
+    const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
+    this.sortField = field;
+    this.sortDirection = direction;
+    this.applyFiltersAndSort();
+  }
+
+  openFilterModal(): void {
+    this.showFilterModal = true;
+  }
+
+  applyFiltersAndSort(): void {
+    const sortCriteria: SortCriteria = {
+      field: this.sortField,
+      direction: this.sortDirection
+    };
+
+    this.filteredEmails = this.emailFilterService.processEmails(
+      this.allEmails,
+      this.activeFilters,
+      sortCriteria
+    );
+
+    this.totalItems = this.filteredEmails.length;
+    this.updatePagination();
+  }
+
+  // Pagination
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.updatePagination();
+  }
+
+  onItemsPerPageChange(itemsPerPage: number): void {
+    this.itemsPerPage = itemsPerPage;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination(): void {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    this.paginatedEmails = this.filteredEmails.slice(start, end);
+  }
+
+  // Selection
+  toggleEmailSelection(event: Event, emailId: string): void {
+    event.stopPropagation();
+    if (this.selectedEmails.has(emailId)) {
+      this.selectedEmails.delete(emailId);
+    } else {
+      this.selectedEmails.add(emailId);
+    }
+    this.updateActionBarVisibility();
+  }
+
+  isEmailSelected(emailId: string): boolean {
+    return this.selectedEmails.has(emailId);
+  }
+
+  toggleSelectAll(): void {
+    if (this.areAllSelected()) {
+      this.selectedEmails.clear();
+    } else {
+      this.paginatedEmails.forEach(email => this.selectedEmails.add(email.id));
+    }
+    this.updateActionBarVisibility();
+  }
+
+  areAllSelected(): boolean {
+    return this.paginatedEmails.length > 0 && 
+           this.paginatedEmails.every(email => this.selectedEmails.has(email.id));
+  }
+
+  updateActionBarVisibility(): void {
+    this.showActionBar = this.selectedEmails.size > 0;
+  }
+
+  getSelectedCount(): number {
+    return this.selectedEmails.size;
+  }
+
+  closeActionBar(): void {
+    this.selectedEmails.clear();
+    this.showActionBar = false;
+    this.moveToFolder = '';
+  }
+
+  onFolderChange(folder: string): void {
+    this.moveToFolder = folder;
+  }
+
+  // Actions - Use FolderService instead of MailService
+  deleteSelectedEmails(): void {
+    if (this.selectedEmails.size === 0) return;
+    
+    const confirmed = confirm(`Move ${this.selectedEmails.size} email(s) to trash?`);
+    if (!confirmed) return;
+
+    const selectedIds = Array.from(this.selectedEmails);
+    
+    // Use FolderService for bulk delete
+    this.folderService.bulkDeleteFromFolder(selectedIds, this.folderId).subscribe({
+      next: () => {
+        alert(`${selectedIds.length} email(s) moved to trash`);
+        this.loadEmails(); // Reload emails from backend
+        this.closeActionBar();
+      },
+      error: (error) => {
+        console.error('Error deleting emails:', error);
+        alert('Failed to delete emails');
+      }
+    });
+  }
+
+  moveSelectedEmails(): void {
+    if (this.selectedEmails.size === 0 || !this.moveToFolder) return;
+    
+    const selectedIds = Array.from(this.selectedEmails);
+    
+    // Use FolderService for bulk move
+    this.folderService.bulkMoveToFolder(selectedIds, `folder_${this.folderId}`, this.moveToFolder).subscribe({
+      next: () => {
+        alert(`${selectedIds.length} email(s) moved successfully`);
+        this.loadEmails(); // Reload emails from backend
+        this.closeActionBar();
+      },
+      error: (error) => {
+        console.error('Error moving emails:', error);
+        alert('Failed to move emails');
+      }
+    });
   }
 }
