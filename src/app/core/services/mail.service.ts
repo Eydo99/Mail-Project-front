@@ -39,7 +39,7 @@ export class MailService {
       subject: email.subject,
       preview: email.preview,
       body: email.body,
-      timestamp: email.timestamp,
+      timestamp: new Date(email.timestamp),
       isStarred: email.starred,
       hasAttachment: email.hasAttachment,
       priority: email.priority
@@ -87,7 +87,7 @@ export class MailService {
    * Get emails for a specific folder (returns observable)
    */
   getEmails(folder: string = 'inbox'): Observable<Email[]> {
-    switch(folder) {
+    switch (folder) {
       case 'inbox':
         return this.inboxEmails$;
       case 'sent':
@@ -108,7 +108,7 @@ export class MailService {
     return this.http.get<any[]>(`${this.apiUrl}/${folder}`).pipe(
       map(emails => this.mapBackendToFrontend(emails)),
       tap(emails => {
-        switch(folder) {
+        switch (folder) {
           case 'inbox':
             this.inboxEmailsSubject.next(emails);
             break;
@@ -217,23 +217,23 @@ export class MailService {
   /**
    * Compose/send a new email
    */
- /**
- * Compose/send a new email
- */
-composeMail(email: any): Observable<string> {
-  return this.http.post(`${this.apiUrl}/compose`, email, {
-    responseType: 'text'
-  });
-}
+  /**
+  * Compose/send a new email
+  */
+  composeMail(email: any): Observable<string> {
+    return this.http.post(`${this.apiUrl}/compose`, email, {
+      responseType: 'text'
+    });
+  }
 
-/**
- * Save email as draft
- */
-saveDraft(email: any): Observable<string> {
-  return this.http.post(`${this.apiUrl}/draft/save`, email, {
-    responseType: 'text'
-  });
-}
+  /**
+   * Save email as draft
+   */
+  saveDraft(email: any): Observable<string> {
+    return this.http.post(`${this.apiUrl}/draft/save`, email, {
+      responseType: 'text'
+    });
+  }
 
 
   /**
@@ -252,14 +252,14 @@ saveDraft(email: any): Observable<string> {
     return this.http.put(
       `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
       {},
-      { responseType: 'text'  }  // <-- This fixes the parsing issue
+      { responseType: 'text' }  // <-- This fixes the parsing issue
     );
   }
   /**
    * Get the BehaviorSubject for a specific folder
    */
   private getSubjectByFolder(folder: string): BehaviorSubject<Email[]> {
-    switch(folder) {
+    switch (folder) {
       case 'inbox':
         return this.inboxEmailsSubject;
       case 'sent':

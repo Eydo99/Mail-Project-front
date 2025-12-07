@@ -5,7 +5,7 @@ export interface Email {
   subject: string;
   preview: string;
   body: string;
-  timestamp: string;
+  timestamp: Date;
   isStarred: boolean;
   hasAttachment: boolean;
   priority: number;
