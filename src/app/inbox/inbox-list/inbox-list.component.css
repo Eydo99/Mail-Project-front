@@ -447,3 +447,12 @@
   stroke: #ef4444;
   fill: none;
 }
+/* Priority Circle Indicator */
+.priority-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}

@@ -57,6 +57,8 @@ export class InboxListComponent implements OnInit {
   showActionBar: boolean = false;
   moveToFolder: string = '';
 
+
+
   constructor(
     private mailService: MailService,
     private emailStateService: EmailStateService,
@@ -326,6 +328,16 @@ export class InboxListComponent implements OnInit {
       alert(message);
     } else {
       alert(`Failed to ${action} emails`);
+    }
+  }
+
+  getPriorityColor(priority: number): string {
+    switch(priority) {
+      case 1: return '#dc2626'; // Red - Urgent
+      case 2: return '#ea580c'; // Orange - High
+      case 3: return '#ca8a04'; // Yellow - Medium
+      case 4: return '#65a30d'; // Green - Low
+      default: return '#9ca3af'; // Gray - Default
     }
   }
 }

@@ -83,6 +83,11 @@
 
       <div class="email-content">
         <div class="email-header">
+          <!-- Priority Circle -->
+          <span
+            class="priority-circle"
+            [style.background-color]="getPriorityColor(email.priority)"
+          ></span>
           <span class="email-sender">{{ email.sender }}</span>
 
           <!-- Star Icon -->
@@ -101,11 +106,7 @@
           ></lucide-icon>
 
           <!-- Urgent Icon -->
-          <lucide-icon
-            *ngIf="email.priority <= 2"
-            [img]="AlertCircle"
-            class="icon urgent-icon"
-          ></lucide-icon>
+
         </div>
 
         <div class="email-subject">{{ email.subject }}</div>
