@@ -34,8 +34,8 @@ export class MailService {
   private mapBackendToFrontend(backendEmails: any[]): Email[] {
     return backendEmails.map(email => ({
       id: email.id.toString(),
-      sender: this.extractSenderName(email.to),
-      senderEmail: email.to[0] || 'unknown@mail.com',
+      sender: this.extractSenderName(email.from),
+      senderEmail: email.from || 'unknown@mail.com',
       subject: email.subject,
       preview: email.preview,
       body: email.body,
@@ -49,11 +49,23 @@ export class MailService {
   /**
    * Extract sender name from email
    */
-  private extractSenderName(recipients: string[]): string {
-    if (!recipients || recipients.length === 0) return 'Unknown';
-    const email = recipients[0];
-    const name = email.split('@')[0];
-    return name.charAt(0).toUpperCase() + name.slice(1);
+  private extractSenderName(from: string[] | string): string {
+    if (!from) return 'Unknown';
+
+    // Handle if 'from' is a string
+    if (typeof from === 'string') {
+      const name = from.split('@')[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    // Handle if 'from' is an array
+    if (Array.isArray(from) && from.length > 0) {
+      const email = from[0];
+      const name = email.split('@')[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    return 'Unknown';
   }
 
   /**
@@ -119,6 +131,16 @@ export class MailService {
    */
   getInboxEmails(): Observable<Email[]> {
     return this.refreshFolder('inbox');
+  }
+
+  /**
+   * Get inbox emails sorted by priority (using backend Priority Queue)
+   */
+  getInboxEmailsByPriority(): Observable<Email[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/inbox/priority`).pipe(
+      map(emails => this.mapBackendToFrontend(emails)),
+      tap(emails => this.inboxEmailsSubject.next(emails))
+    );
   }
 
   /**
@@ -227,12 +249,12 @@ saveDraft(email: any): Observable<string> {
    * Move email to another folder
    */
   moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
-    return this.http.put<string>(
+    return this.http.put(
       `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
-      {}
+      {},
+      { responseType: 'text'  }  // <-- This fixes the parsing issue
     );
   }
-
   /**
    * Get the BehaviorSubject for a specific folder
    */

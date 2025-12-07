@@ -18,7 +18,7 @@ export class ComposeComponent {
   body: string = '';
   priority: string = 'normal';
   attachments: File[] = [];
-  
+
   isLoading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
@@ -40,10 +40,10 @@ export class ComposeComponent {
 
     // Convert priority string to number matching your DTO
     const priorityMap: { [key: string]: number } = {
-      'low': 1,
-      'normal': 2,
-      'high': 3,
-      'urgent': 4
+      'low': 4,
+      'normal': 3,
+      'high': 2,
+      'urgent': 1
     };
 
     // Split recipients by comma and trim whitespace
@@ -85,10 +85,10 @@ export class ComposeComponent {
 
     // Convert priority string to number matching your DTO
     const priorityMap: { [key: string]: number } = {
-      'low': 1,
-      'normal': 2,
-      'high': 3,
-      'urgent': 4
+      'low': 4,
+      'normal': 3,
+      'high': 2,
+      'urgent': 1
     };
 
     // Split recipients by comma and trim whitespace
@@ -154,7 +154,7 @@ export class ComposeComponent {
    */
   private async convertAttachments(): Promise<any[]> {
     const attachmentDTOs = [];
-    
+
     for (const file of this.attachments) {
       try {
         const base64Content = await this.fileToBase64(file);
@@ -170,7 +170,7 @@ export class ComposeComponent {
         console.error('Error converting file to base64:', error);
       }
     }
-    
+
     return attachmentDTOs;
   }
 
@@ -193,7 +193,7 @@ export class ComposeComponent {
     // Validate all email addresses (handle comma-separated emails)
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const emails = this.to.split(',').map(email => email.trim()).filter(email => email);
-    
+
     for (const email of emails) {
       if (!emailPattern.test(email)) {
         this.errorMessage = `Invalid email address: ${email}`;

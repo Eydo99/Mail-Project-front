@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Inbox, Star, Send, FileText, Trash2, Users, Settings, Plus, FolderOpen } from 'lucide-angular';
 import { FolderService } from '../../core/services/folder.service';
+import {ComposeService} from "../../core/services/compose.service";
 
 @Component({
   selector: 'app-sidebar',
@@ -29,6 +30,7 @@ export class SidebarComponent implements OnInit {
   constructor(
     private router: Router,
     private folderService: FolderService
+    ,private composeService: ComposeService
   ) {}
 
   ngOnInit(): void {
@@ -53,6 +55,5 @@ export class SidebarComponent implements OnInit {
   openCompose(): void {
   this.composeService.openCompose();
 }
-    console.log('Opening compose...');
-  }
+
 }
