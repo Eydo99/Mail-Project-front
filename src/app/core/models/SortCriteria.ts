@@ -1,7 +1,4 @@
 export interface SortCriteria {
-  field: SortField;
-  direction: SortDirection;
+  field: 'date' | 'sender' | 'subject' | 'priority';
+  direction: 'asc' | 'desc';
 }
-
-export type SortField = 'date' | 'sender' | 'subject' | 'importance';
-export type SortDirection = 'asc' | 'desc';

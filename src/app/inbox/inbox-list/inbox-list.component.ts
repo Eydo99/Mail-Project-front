@@ -3,32 +3,33 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
+import { EmailFilterService } from '../../core/services/email-filter.service';
 import { Email } from '../../core/models/email.model';
+import { FilterCriteria } from '../../core/models/FilterCriteria';
+import { SortCriteria } from '../../core/models/SortCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
-import { SortCriteria } from '../../core/models/SortCriteria';
-import { FilterCriteria } from '../../core/models/FilterCriteria';
-import { EmailFilterService } from '../../core/services/email-filter.service';
+import { FilterModalComponent } from "../../components/filter-modal/filter-modal.component";
 
 @Component({
   selector: 'app-inbox-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent, FilterModalComponent],
   templateUrl: './inbox-list.component.html',
-  styleUrl: './inbox-list.component.css'
+  styleUrls: ['./inbox-list.component.css']
 })
 export class InboxListComponent implements OnInit {
   // Folder configuration
   folderName: string = 'inbox';
   title: string = 'Inbox';
 
-  // Pagination properties
+  // Pagination
   paginatedEmails: Email[] = [];
   currentPage: number = 1;
   itemsPerPage: number = 10;
   totalItems: number = 0;
 
-  // Export icons for template
+  // Icons
   readonly Star = Star;
   readonly Paperclip = Paperclip;
   readonly AlertCircle = AlertCircle;
@@ -37,27 +38,22 @@ export class InboxListComponent implements OnInit {
   readonly FolderInput = FolderInput;
   readonly X = X;
 
+  // Email data
   allEmails: Email[] = [];
   filteredEmails: Email[] = [];
-  searchQuery: string = '';
-  sortBy: string = 'date';
   selectedEmailId: string | null = null;
 
-  // Sort
-  sortField: SortCriteria['field'] = 'date';
-  sortDirection: SortCriteria['direction'] = 'desc';
-
-  // Filter
-  showFilterModal: boolean = false;
-  activeFilters: FilterCriteria = {};
+  // Search, Sort, Filter
+  searchQuery: string = '';
+  sortCriteria: SortCriteria = { field: 'date', direction: 'desc' };
+  filterCriteria: FilterCriteria = {};
   hasActiveFilters: boolean = false;
+  showFilterModal: boolean = false;
 
-  // Selection properties for action bar
+  // Selection for action bar
   selectedEmails: Set<string> = new Set();
   showActionBar: boolean = false;
   moveToFolder: string = '';
-
-
 
   constructor(
     private mailService: MailService,
@@ -68,7 +64,7 @@ export class InboxListComponent implements OnInit {
   ngOnInit(): void {
     this.loadEmails();
 
-    // Track which email is selected
+    // Track selected email
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
@@ -84,67 +80,96 @@ export class InboxListComponent implements OnInit {
     });
   }
 
+  /**
+   * Apply filters and sorting
+   */
+  applyFiltersAndSort(): void {
+    // Apply search as part of filter criteria
+    const criteria: FilterCriteria = {
+      ...this.filterCriteria,
+      searchTerm: this.searchQuery
+    };
+
+    // Process emails through filter service
+    this.filteredEmails = this.emailFilterService.processEmails(
+      this.allEmails,
+      criteria,
+      this.sortCriteria
+    );
+
+    // Check if filters are active
+    this.hasActiveFilters = this.emailFilterService.hasActiveFilters(criteria);
+
+    // Update pagination
+    this.totalItems = this.filteredEmails.length;
+    this.updatePagination();
+  }
+
+  /**
+   * Handle search input
+   */
+  onSearch(query: string): void {
+    this.searchQuery = query;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
+
+  /**
+   * Handle sort change
+   */
+  onSortChange(value: string): void {
+    const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
+    this.sortCriteria = { field, direction };
+    this.applyFiltersAndSort();
+  }
+
+  /**
+   * Open filter modal
+   */
+  openFilterModal(): void {
+    this.showFilterModal = true;
+  }
+
+  /**
+   * Close filter modal
+   */
+  closeFilterModal(): void {
+    this.showFilterModal = false;
+  }
+
+  /**
+   * Apply filters from modal
+   */
+  onApplyFilters(criteria: FilterCriteria): void {
+    this.filterCriteria = criteria;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
+
+  /**
+   * Clear all filters
+   */
+  clearAllFilters(): void {
+    this.filterCriteria = {};
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
+
+  /**
+   * Email click handler
+   */
   onEmailClick(email: Email): void {
     this.mailService.markAsRead(email.id);
     this.emailStateService.selectEmail(email);
   }
 
+  /**
+   * Toggle star
+   */
   toggleStar(event: Event, email: Email): void {
     event.stopPropagation();
     this.mailService.toggleStar(email.id, this.folderName);
-  }
-
-  onSearch(query: string): void {
-    this.searchQuery = query;
-    this.activeFilters.searchTerm = query;
-    this.currentPage = 1;
-    this.applyFiltersAndSort();
-  }
-
-  onSortChange(value: string): void {
-    const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
-    this.sortField = field;
-    this.sortDirection = direction;
-    this.applyFiltersAndSort();
-  }
-
-  openFilterModal(): void {
-    this.showFilterModal = true;
-  }
-
-  closeFilterModal(): void {
-    this.showFilterModal = false;
-  }
-
-  onApplyFilters(criteria: FilterCriteria): void {
-    this.activeFilters = { ...this.activeFilters, ...criteria };
-    this.hasActiveFilters = Object.keys(criteria).filter(key => key !== 'searchTerm').length > 0;
-    this.currentPage = 1;
-    this.applyFiltersAndSort();
-  }
-
-  clearAllFilters(): void {
-    this.activeFilters = {};
-    this.searchQuery = '';
-    this.hasActiveFilters = false;
-    this.currentPage = 1;
-    this.applyFiltersAndSort();
-  }
-
-  applyFiltersAndSort(): void {
-    const sortCriteria: SortCriteria = {
-      field: this.sortField,
-      direction: this.sortDirection
-    };
-
-    this.filteredEmails = this.emailFilterService.processEmails(
-      this.allEmails,
-      this.activeFilters,
-      sortCriteria
-    );
-
-    this.totalItems = this.filteredEmails.length;
-    this.updatePagination();
   }
 
   // ============== PAGINATION ==============
@@ -168,9 +193,6 @@ export class InboxListComponent implements OnInit {
 
   // ============== SELECTION & ACTION BAR ==============
 
-  /**
-   * Toggle individual email selection
-   */
   toggleEmailSelection(event: Event, emailId: string): void {
     event.stopPropagation();
 
@@ -183,16 +205,10 @@ export class InboxListComponent implements OnInit {
     this.updateActionBarVisibility();
   }
 
-  /**
-   * Check if email is selected
-   */
   isEmailSelected(emailId: string): boolean {
     return this.selectedEmails.has(emailId);
   }
 
-  /**
-   * Select or deselect all emails
-   */
   toggleSelectAll(): void {
     if (this.areAllSelected()) {
       this.selectedEmails.clear();
@@ -205,49 +221,31 @@ export class InboxListComponent implements OnInit {
     this.updateActionBarVisibility();
   }
 
-  /**
-   * Check if all emails are selected
-   */
   areAllSelected(): boolean {
     return this.paginatedEmails.length > 0 &&
       this.selectedEmails.size === this.paginatedEmails.length;
   }
 
-  /**
-   * Update action bar visibility
-   */
   updateActionBarVisibility(): void {
     this.showActionBar = this.selectedEmails.size > 0;
   }
 
-  /**
-   * Get count of selected emails
-   */
   getSelectedCount(): number {
     return this.selectedEmails.size;
   }
 
-  /**
-   * Close action bar and clear selection
-   */
   closeActionBar(): void {
     this.selectedEmails.clear();
     this.showActionBar = false;
     this.moveToFolder = '';
   }
 
-  /**
-   * Handle folder selection change
-   */
   onFolderChange(folder: string): void {
     this.moveToFolder = folder;
   }
 
   // ============== ACTIONS ==============
 
-  /**
-   * Delete selected emails
-   */
   deleteSelectedEmails(): void {
     if (this.selectedEmails.size === 0) return;
 
@@ -280,9 +278,6 @@ export class InboxListComponent implements OnInit {
     });
   }
 
-  /**
-   * Move selected emails to another folder
-   */
   moveSelectedEmails(): void {
     if (this.selectedEmails.size === 0 || !this.moveToFolder) {
       alert('Please select a folder');
@@ -315,9 +310,6 @@ export class InboxListComponent implements OnInit {
     });
   }
 
-  /**
-   * Handle action completion
-   */
   private onActionComplete(successCount: number, totalCount: number, action: string): void {
     if (successCount > 0) {
       this.loadEmails();

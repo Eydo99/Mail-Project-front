@@ -1,139 +1,228 @@
-// services/email-filter.service.ts
-// Shared service for filtering, searching, and sorting emails
+// core/services/email-filter.service.ts
 
 import { Injectable } from '@angular/core';
-import { Email} from '../models/email.model';
+import { Email } from '../models/email.model';
 import { FilterCriteria } from '../models/FilterCriteria';
 import { SortCriteria } from '../models/SortCriteria';
 
+/**
+ * Chain of Responsibility Pattern for Email Filtering
+ * Each filter is a link in the chain
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class EmailFilterService {
 
-  /**
-   * Search emails by term (searches in subject, sender, body, attachments)
-   */
-  searchEmails(emails: Email[], searchTerm: string): Email[] {
-    if (!searchTerm || searchTerm.trim() === '') {
-      return emails;
-    }
-
-    const term = searchTerm.toLowerCase().trim();
-    
-    return emails.filter(email => 
-      email.subject.toLowerCase().includes(term) ||
-      email.sender.toLowerCase().includes(term) ||
-      email.senderEmail.toLowerCase().includes(term) ||
-      email.body.toLowerCase().includes(term) //||
-      //email.receivers.some(r => r.toLowerCase().includes(term)) //||
-     // email.attachments.some(a => a.name.toLowerCase().includes(term)
-    );
-  }
+  constructor() {}
 
   /**
-   * Filter emails based on criteria
+   * Apply all filters and sorting to emails
    */
-  filterEmails(emails: Email[], criteria: FilterCriteria): Email[] {
-    let filtered = [...emails];
+  processEmails(
+    emails: Email[],
+    filters: FilterCriteria,
+    sort?: SortCriteria
+  ): Email[] {
+    let filtered = [...emails]; // Create copy to avoid mutation
 
-    // Search term
-    if (criteria.searchTerm) {
-      filtered = this.searchEmails(filtered, criteria.searchTerm);
+    // Apply each filter in chain
+    filtered = this.applySearchFilter(filtered, filters.searchTerm);
+    filtered = this.applyDateRangeFilter(filtered, filters.dateFrom, filters.dateTo);
+    filtered = this.applySenderFilter(filtered, filters.sender);
+    filtered = this.applyPriorityFilter(filtered, filters.priority);
+    filtered = this.applyAttachmentFilter(filtered, filters.hasAttachment);
+    filtered = this.applyStarredFilter(filtered, filters.isStarred);
+    filtered = this.applySubjectFilter(filtered, filters.subjectContains);
+    filtered = this.applyBodyFilter(filtered, filters.bodyContains);
+
+    // Apply sorting if provided
+    if (sort) {
+      filtered = this.applySorting(filtered, sort);
     }
-
-    // Filter by sender
-    if (criteria.sender) {
-      const sender = criteria.sender.toLowerCase();
-      filtered = filtered.filter(email => 
-        email.sender.toLowerCase().includes(sender) ||
-        email.senderEmail.toLowerCase().includes(sender)
-      );
-    }
-
-    // Filter by attachment
-    if (criteria.hasAttachment !== undefined) {
-      filtered = filtered.filter(email => email.hasAttachment === criteria.hasAttachment);
-    }
-
-    // Filter by importance
-    //if (criteria.importance) {
-     // filtered = filtered.filter(email => email.importance === criteria.importance);
-   // }
-
-    // Filter by date range
-    //if (criteria.dateFrom) {
-      //filtered = filtered.filter(email => email.date >= criteria.dateFrom!);
-   // }
-
-   // if (criteria.dateTo) {
-     // filtered = filtered.filter(email => email.date <= criteria.dateTo!);
-   // }
 
     return filtered;
   }
 
   /**
-   * Sort emails based on criteria
+   * Search in subject, body, sender, and senderEmail
    */
-  sortEmails(emails: Email[], criteria: SortCriteria): Email[] {
+  private applySearchFilter(emails: Email[], searchTerm?: string): Email[] {
+    if (!searchTerm || searchTerm.trim() === '') {
+      return emails;
+    }
+
+    const term = searchTerm.toLowerCase().trim();
+    return emails.filter(email =>
+      email.subject?.toLowerCase().includes(term) ||
+      email.body?.toLowerCase().includes(term) ||
+      email.sender?.toLowerCase().includes(term) ||
+      email.senderEmail?.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Filter by date range
+   */
+  private applyDateRangeFilter(emails: Email[], dateFrom?: Date, dateTo?: Date): Email[] {
+    if (!dateFrom && !dateTo) {
+      return emails;
+    }
+
+    return emails.filter(email => {
+      const emailDate = new Date(email.timestamp);
+      
+      if (dateFrom && emailDate < dateFrom) {
+        return false;
+      }
+      
+      if (dateTo) {
+        // Set time to end of day for dateTo
+        const endOfDay = new Date(dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        if (emailDate > endOfDay) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }
+
+  /**
+   * Filter by sender
+   */
+  private applySenderFilter(emails: Email[], sender?: string): Email[] {
+    if (!sender || sender.trim() === '') {
+      return emails;
+    }
+
+    const senderLower = sender.toLowerCase().trim();
+    return emails.filter(email =>
+      email.sender?.toLowerCase().includes(senderLower) ||
+      email.senderEmail?.toLowerCase().includes(senderLower)
+    );
+  }
+
+  /**
+   * Filter by priority (can select multiple priorities)
+   */
+  private applyPriorityFilter(emails: Email[], priorities?: number[]): Email[] {
+    if (!priorities || priorities.length === 0) {
+      return emails;
+    }
+
+    return emails.filter(email => priorities.includes(email.priority));
+  }
+
+  /**
+   * Filter by attachment presence
+   */
+  private applyAttachmentFilter(emails: Email[], hasAttachment?: boolean): Email[] {
+    if (hasAttachment === undefined || hasAttachment === null) {
+      return emails;
+    }
+
+    return emails.filter(email => email.hasAttachment === hasAttachment);
+  }
+
+  /**
+   * Filter by starred status
+   */
+  private applyStarredFilter(emails: Email[], isStarred?: boolean): Email[] {
+    if (isStarred === undefined || isStarred === null) {
+      return emails;
+    }
+
+    return emails.filter(email => email.isStarred === isStarred);
+  }
+
+  /**
+   * Filter by subject contains
+   */
+  private applySubjectFilter(emails: Email[], subjectContains?: string): Email[] {
+    if (!subjectContains || subjectContains.trim() === '') {
+      return emails;
+    }
+
+    const term = subjectContains.toLowerCase().trim();
+    return emails.filter(email =>
+      email.subject?.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Filter by body contains
+   */
+  private applyBodyFilter(emails: Email[], bodyContains?: string): Email[] {
+    if (!bodyContains || bodyContains.trim() === '') {
+      return emails;
+    }
+
+    const term = bodyContains.toLowerCase().trim();
+    return emails.filter(email =>
+      email.body?.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Apply sorting
+   */
+  private applySorting(emails: Email[], sort: SortCriteria): Email[] {
     const sorted = [...emails];
 
     sorted.sort((a, b) => {
       let comparison = 0;
 
-      switch (criteria.field) {
-       // case 'date':
-         // comparison = a.date.getTime() - b.date.getTime();
-         // break;
+      switch (sort.field) {
+        case 'date':
+          comparison = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+          break;
 
         case 'sender':
-          comparison = a.sender.localeCompare(b.sender);
+          comparison = (a.sender || '').localeCompare(b.sender || '');
           break;
 
         case 'subject':
-          comparison = a.subject.localeCompare(b.subject);
+          comparison = (a.subject || '').localeCompare(b.subject || '');
           break;
 
-       // case 'importance':
-         // const importanceOrder = { low: 0, normal: 1, high: 2 };
-          //comparison = importanceOrder[a.importance] - importanceOrder[b.importance];
-          //break;
+        case 'priority':
+          comparison = a.priority - b.priority;
+          break;
+
+        default:
+          comparison = 0;
       }
 
-      return criteria.direction === 'asc' ? comparison : -comparison;
+      return sort.direction === 'asc' ? comparison : -comparison;
     });
 
     return sorted;
   }
 
   /**
-   * Apply search, filter, and sort together
+   * Check if any filters are active
    */
-  processEmails(
-    emails: Email[], 
-    filterCriteria: FilterCriteria, 
-    sortCriteria: SortCriteria
-  ): Email[] {
-    let processed = this.filterEmails(emails, filterCriteria);
-    processed = this.sortEmails(processed, sortCriteria);
-    return processed;
+  hasActiveFilters(filters: FilterCriteria): boolean {
+    return !!(
+      filters.searchTerm ||
+      filters.dateFrom ||
+      filters.dateTo ||
+      filters.sender ||
+      (filters.priority && filters.priority.length > 0) ||
+      filters.hasAttachment !== undefined ||
+      filters.isStarred !== undefined ||
+      filters.subjectContains ||
+      filters.bodyContains
+    );
   }
 
   /**
-   * Get emails by folder
+   * Clear all filters
    */
-  getEmailsByFolder(emails: Email[], folder: Email['folder']): Email[] {
-    return emails.filter(email => email.folder === folder);
-  }
-
-  /**
-   * Move emails to a specific folder
-   */
-  moveToFolder(emails: Email[], folder: Email['folder']): Email[] {
-    return emails.map(email => ({
-      ...email,
-      folder: folder
-    }));
+  clearFilters(): FilterCriteria {
+    return {};
   }
 }

@@ -3,17 +3,21 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import { CommonModule } from '@angular/common';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
+import { EmailFilterService } from '../../core/services/email-filter.service';
 import { Email } from '../../core/models/email.model';
-import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
-import { PaginationComponent } from "../../components/pagination/pagination.component";
 import { SortCriteria } from '../../core/models/SortCriteria';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
-import { EmailFilterService } from '../../core/services/email-filter.service';
+import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
+import { PaginationComponent } from "../../components/pagination/pagination.component";
+import { FilterModalComponent } from '../../components/filter-modal/filter-modal.component';
+
+
+
 
 @Component({
   selector: 'app-draft-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent,FilterModalComponent],
   templateUrl: './draft-list.component.html',
   styleUrl: './draft-list.component.css'
 })
@@ -38,20 +42,17 @@ export class DraftListComponent implements OnInit{
   readonly FolderInput = FolderInput;
   readonly X = X;
 
+  // Email data
   allEmails: Email[] = [];
   filteredEmails: Email[] = [];
-  searchQuery: string = '';
-  sortBy: string = 'date';
   selectedEmailId: string | null = null;
 
-  // Sort
-  sortField: SortCriteria['field'] = 'date';
-  sortDirection: SortCriteria['direction'] = 'desc';
-
-  // Filter
-  showFilterModal: boolean = false;
-  activeFilters: FilterCriteria = {};
+  // Search, Sort, Filter
+  searchQuery: string = '';
+  sortCriteria: SortCriteria = { field: 'date', direction: 'desc' };
+  filterCriteria: FilterCriteria = {};
   hasActiveFilters: boolean = false;
+  showFilterModal: boolean = false;
 
   // Selection properties for action bar
   selectedEmails: Set<string> = new Set();
@@ -93,57 +94,80 @@ export class DraftListComponent implements OnInit{
     this.mailService.toggleStar(email.id, this.folderName);
   }
 
+ /**
+   * Apply filters and sorting
+   */
+  applyFiltersAndSort(): void {
+    // Apply search as part of filter criteria
+    const criteria: FilterCriteria = {
+      ...this.filterCriteria,
+      searchTerm: this.searchQuery
+    };
+
+    // Process emails through filter service
+    this.filteredEmails = this.emailFilterService.processEmails(
+      this.allEmails,
+      criteria,
+      this.sortCriteria
+    );
+
+    // Check if filters are active
+    this.hasActiveFilters = this.emailFilterService.hasActiveFilters(criteria);
+
+    // Update pagination
+    this.totalItems = this.filteredEmails.length;
+    this.updatePagination();
+  }
+
+  /**
+   * Handle search input
+   */
   onSearch(query: string): void {
     this.searchQuery = query;
-    this.activeFilters.searchTerm = query;
     this.currentPage = 1;
     this.applyFiltersAndSort();
   }
 
+  /**
+   * Handle sort change
+   */
   onSortChange(value: string): void {
     const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
-    this.sortField = field;
-    this.sortDirection = direction;
+    this.sortCriteria = { field, direction };
     this.applyFiltersAndSort();
   }
 
+  /**
+   * Open filter modal
+   */
   openFilterModal(): void {
     this.showFilterModal = true;
   }
 
+  /**
+   * Close filter modal
+   */
   closeFilterModal(): void {
     this.showFilterModal = false;
   }
 
+  /**
+   * Apply filters from modal
+   */
   onApplyFilters(criteria: FilterCriteria): void {
-    this.activeFilters = { ...this.activeFilters, ...criteria };
-    this.hasActiveFilters = Object.keys(criteria).filter(key => key !== 'searchTerm').length > 0;
+    this.filterCriteria = criteria;
     this.currentPage = 1;
     this.applyFiltersAndSort();
   }
 
+  /**
+   * Clear all filters
+   */
   clearAllFilters(): void {
-    this.activeFilters = {};
+    this.filterCriteria = {};
     this.searchQuery = '';
-    this.hasActiveFilters = false;
     this.currentPage = 1;
     this.applyFiltersAndSort();
-  }
-
-  applyFiltersAndSort(): void {
-    const sortCriteria: SortCriteria = {
-      field: this.sortField,
-      direction: this.sortDirection
-    };
-
-    this.filteredEmails = this.emailFilterService.processEmails(
-      this.allEmails,
-      this.activeFilters,
-      sortCriteria
-    );
-
-    this.totalItems = this.filteredEmails.length;
-    this.updatePagination();
   }
 
   // ============== PAGINATION ==============

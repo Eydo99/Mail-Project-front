@@ -1,4 +1,13 @@
 <div class="inbox-container">
+   <!-- Filter Modal -->
+  <app-filter-modal
+    *ngIf="showFilterModal"
+    [currentFilters]="filterCriteria"
+    (applyFilters)="onApplyFilters($event)"
+    (clearFilters)="clearAllFilters()"
+    (close)="closeFilterModal()"
+  ></app-filter-modal>
+
   <!-- Action Bar -->
   <div class="action-bar" *ngIf="showActionBar">
     <div class="action-bar-content">
@@ -57,9 +66,22 @@
         <option value="subject-desc">Subject (Z-A)</option>
       </select>
 
-      <button class="filters-btn" (click)="openFilterModal()">
+    <button 
+        class="filters-btn" 
+        [class.active]="hasActiveFilters"
+        (click)="openFilterModal()"
+      >
         <lucide-icon [img]="Filter" class="filter-icon"></lucide-icon>
         <span>Filters</span>
+        <span *ngIf="hasActiveFilters" class="filter-badge">●</span>
+      </button>
+    </div>
+
+    <!-- Active Filters Info -->
+    <div class="active-filters" *ngIf="hasActiveFilters">
+      <span class="filter-info-text">Filters Active</span>
+      <button class="clear-filters-btn" (click)="clearAllFilters()">
+        Clear All Filters
       </button>
     </div>
   </div>
