@@ -73,17 +73,14 @@ export class MailService {
   /**
    * Load inbox emails from backend
    */
-  private loadInboxEmails(): void {
-    this.http.get<any[]>(`${this.apiUrl}/inbox`).subscribe({
-      next: (emails) => {
-        const mappedEmails = this.mapBackendToFrontend(emails);
-        this.inboxEmailsSubject.next(mappedEmails);
-      },
-      error: (error) => {
-        console.error('Error loading inbox emails:', error);
-      }
-    });
-  }
+private loadInboxEmails(): void {
+  this.http.get<any[]>(`${this.apiUrl}/inbox`, {
+    withCredentials: true
+  }).subscribe({
+    next: emails => this.inboxEmailsSubject.next(this.mapBackendToFrontend(emails)),
+    error: err => console.error('Error loading inbox emails:', err),
+  });
+}
 
   /**
    * Get emails for a specific folder (returns observable)
@@ -107,26 +104,28 @@ export class MailService {
    * Refresh emails for a specific folder
    */
   refreshFolder(folder: string): Observable<Email[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${folder}`).pipe(
-      map(emails => this.mapBackendToFrontend(emails)),
-      tap(emails => {
-        switch (folder) {
-          case 'inbox':
-            this.inboxEmailsSubject.next(emails);
-            break;
-          case 'sent':
-            this.sentEmailsSubject.next(emails);
-            break;
-          case 'draft':
-            this.draftEmailsSubject.next(emails);
-            break;
-          case 'trash':
-            this.trashEmailsSubject.next(emails);
-            break;
-        }
-      })
-    );
-  }
+  return this.http.get<any[]>(`${this.apiUrl}/${folder}`, {
+    withCredentials: true
+  }).pipe(
+    map(emails => this.mapBackendToFrontend(emails)),
+    tap(emails => {
+      switch (folder) {
+        case 'inbox':
+          this.inboxEmailsSubject.next(emails);
+          break;
+        case 'sent':
+          this.sentEmailsSubject.next(emails);
+          break;
+        case 'draft':
+          this.draftEmailsSubject.next(emails);
+          break;
+        case 'trash':
+          this.trashEmailsSubject.next(emails);
+          break;
+      }
+    })
+  );
+}
 
   /**
    * Get inbox emails with mapping
@@ -138,12 +137,14 @@ export class MailService {
   /**
    * Get inbox emails sorted by priority (using backend Priority Queue)
    */
-  getInboxEmailsByPriority(): Observable<Email[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/inbox/priority`).pipe(
-      map(emails => this.mapBackendToFrontend(emails)),
-      tap(emails => this.inboxEmailsSubject.next(emails))
-    );
-  }
+getInboxEmailsByPriority(): Observable<Email[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/inbox/priority`, {
+    withCredentials: true
+  }).pipe(
+    map(emails => this.mapBackendToFrontend(emails)),
+    tap(emails => this.inboxEmailsSubject.next(emails))
+  );
+}
 
   /**
    * Get sent emails with mapping
@@ -176,9 +177,12 @@ export class MailService {
   /**
    * Get specific email by ID
    */
-  getEmailById(id: string, folder: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}?folder=${folder}`);
-  }
+ getEmailById(id: string, folder: string): Observable<any> {
+  return this.http.get<any>(`${this.apiUrl}/${id}?folder=${folder}`, {
+    withCredentials: true
+  });
+}
+
 
   /**
    * Toggle star status
@@ -222,41 +226,46 @@ export class MailService {
   /**
   * Compose/send a new email
   */
-  composeMail(email: any): Observable<string> {
-    return this.http.post(`${this.apiUrl}/compose`, email, {
-      responseType: 'text'
-    });
-  }
-
+composeMail(email: any): Observable<string> {
+  return this.http.post(`${this.apiUrl}/compose`, email, {
+    responseType: 'text',
+    withCredentials: true
+  });
+}
   /**
    * Save email as draft
    */
-  saveDraft(email: any): Observable<string> {
-    return this.http.post(`${this.apiUrl}/draft/save`, email, {
-      responseType: 'text'
-    });
-  }
+saveDraft(email: any): Observable<string> {
+  return this.http.post(`${this.apiUrl}/draft/save`, email, {
+    responseType: 'text',
+    withCredentials: true
+  });
+}
 
 
   /**
    * Delete an email
    */
-  deleteEmail(emailId: string, folder: string): Observable<string> {
-    return this.http.delete(`${this.apiUrl}/${emailId}?folder=${folder}`, {
-      responseType: 'text'  // Add this option
-    });
-  }
+deleteEmail(emailId: string, folder: string): Observable<string> {
+  return this.http.delete(`${this.apiUrl}/${emailId}?folder=${folder}`, {
+    responseType: 'text',
+    withCredentials: true
+  });
+}
 
   /**
    * Move email to another folder
    */
-  moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
-    return this.http.put(
-      `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
-      {},
-      { responseType: 'text' }  // <-- This fixes the parsing issue
-    );
-  }
+moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
+  return this.http.put(
+    `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
+    {},
+    {
+      responseType: 'text',
+      withCredentials: true
+    }
+  );
+}
 
   /**
    * Get attachment file URL for viewing/downloading

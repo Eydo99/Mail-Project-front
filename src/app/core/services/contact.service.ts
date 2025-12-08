@@ -28,7 +28,7 @@ export class ContactService {
   ): Observable<PaginatedContactResponse> {
 
     let params = new HttpParams()
-      .set('page', (page - 1).toString()) // backend expects 0-based page index
+      .set('page', (page - 1).toString())
       .set('size', size.toString())
       .set('sortBy', sortBy);
 
@@ -36,18 +36,27 @@ export class ContactService {
       params = params.set('search', search);
     }
 
-    return this.http.get<PaginatedContactResponse>(this.apiUrl, { params });
+    return this.http.get<PaginatedContactResponse>(this.apiUrl, {
+      params,
+      withCredentials: true
+    });
   }
 
   createContact(request: ContactRequest): Observable<Contact> {
-    return this.http.post<Contact>(this.apiUrl, request);
+    return this.http.post<Contact>(this.apiUrl, request, {
+      withCredentials: true
+    });
   }
 
   updateContact(id: string, request: ContactRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, request);
+    return this.http.put<void>(`${this.apiUrl}/${id}`, request, {
+      withCredentials: true
+    });
   }
 
   deleteContact(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      withCredentials: true
+    });
   }
 }

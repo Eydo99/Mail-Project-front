@@ -44,19 +44,75 @@
   width: 80px;
 }
 
+/* ----------------------------------
+   NAVIGATION ICONS - FIXED
+---------------------------------- */
 .nav-icon {
   width: 20px;
   height: 20px;
-  object-fit: contain;
+  flex-shrink: 0;
   display: block;
-
   margin: 0;
   padding: 0;
-  background: none !important;
-  box-shadow: none !important;
-  border: none !important;
 }
 
+/* For SVG icons (lucide-icon) */
+.nav-icon svg,
+lucide-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: white;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* For image icons */
+.nav-icon img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1); /* Makes icons white */
+}
+
+/* Ensure icons are visible in nav buttons */
+.nav-btn .nav-icon {
+  color: white;
+  stroke: white;
+}
+
+/* Active state icons */
+.nav-btn--active .nav-icon svg,
+.nav-btn--active lucide-icon svg {
+  stroke: #78a8dd;
+}
+
+/* Hover state icons */
+.nav-btn:hover .nav-icon svg,
+.nav-btn:hover lucide-icon svg {
+  stroke: #E3E3E3;
+}
+
+/* Utility button icons */
+.utility-btn .nav-icon svg,
+.utility-btn lucide-icon svg {
+  stroke: white;
+  stroke-width: 2;
+}
+
+/* Make sure lucide-icon component itself doesn't interfere */
+lucide-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+/* For the new message button icon */
+.new-message-btn .nav-icon svg,
+.new-message-btn lucide-icon svg {
+  stroke: white;
+  stroke-width: 2.5;
+}
 
 .sidebar.closed .nav-btn {
   padding: 8px;

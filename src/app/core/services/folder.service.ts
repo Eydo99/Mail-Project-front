@@ -29,147 +29,112 @@ export class FolderService {
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Get all folders
-   * GET /api/folders
-   */
   getAllFolders(): Observable<FolderData[]> {
-    return this.http.get<FolderData[]>(this.apiUrl);
+    return this.http.get<FolderData[]>(this.apiUrl, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Get folder by ID
-   * GET /api/folders/{id}
-   */
   getFolderById(folderId: string): Observable<FolderData> {
-    return this.http.get<FolderData>(`${this.apiUrl}/${folderId}`);
+    return this.http.get<FolderData>(`${this.apiUrl}/${folderId}`, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Create new folder
-   * POST /api/folders
-   */
   createFolder(request: FolderRequest): Observable<FolderData> {
-    return this.http.post<FolderData>(this.apiUrl, request);
+    return this.http.post<FolderData>(this.apiUrl, request, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Update folder
-   * PUT /api/folders/{id}
-   */
   updateFolder(folderId: string, request: FolderRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${folderId}`, request);
+    return this.http.put<void>(`${this.apiUrl}/${folderId}`, request, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Delete folder
-   * DELETE /api/folders/{id}
-   */
   deleteFolder(folderId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${folderId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${folderId}`, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Get all emails in a folder
-   * GET /api/folders/{id}/emails
-   */
   getEmailsByFolder(folderId: string): Observable<Email[]> {
-    return this.http.get<Email[]>(`${this.apiUrl}/${folderId}/emails`);
+    return this.http.get<Email[]>(`${this.apiUrl}/${folderId}/emails`, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Update folder email count
-   * PATCH /api/folders/{id}/count
-   */
   updateFolderCount(folderId: string, count: number): Observable<void> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.patch<void>(`${this.apiUrl}/${folderId}/count`, { count }, { headers });
+    return this.http.patch<void>(`${this.apiUrl}/${folderId}/count`, { count }, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Increment folder email count
-   * PATCH /api/folders/{id}/increment
-   */
   incrementFolderCount(folderId: string, increment: number): Observable<void> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.patch<void>(`${this.apiUrl}/${folderId}/increment`, { increment }, { headers });
+    return this.http.patch<void>(`${this.apiUrl}/${folderId}/increment`, { increment }, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Move email to custom folder
-   * PUT /api/emails/{id}/move
-   */
   moveEmailToFolder(emailId: string, fromFolder: string, toFolderId: string): Observable<any> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
     
     return this.http.put(
       `${this.emailApiUrl}/${emailId}/move`,
       { fromFolder, toFolder },
-      { headers }
+      { withCredentials: true }
     );
   }
 
-  /**
-   * Bulk move emails to folder
-   * PUT /api/emails/bulk-move
-   */
   bulkMoveToFolder(emailIds: string[], fromFolder: string, toFolderId: string): Observable<any> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
     
     return this.http.put(
       `${this.emailApiUrl}/bulk-move`,
       { emailIds, fromFolder, toFolder },
-      { headers }
+      { withCredentials: true }
     );
   }
 
-  /**
-   * Delete email from custom folder
-   * DELETE /api/emails/{id}?folder=folder_123
-   */
   deleteEmailFromFolder(emailId: string, folderId: string): Observable<any> {
     const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
     const params = new HttpParams().set('folder', folder);
     
-    return this.http.delete(`${this.emailApiUrl}/${emailId}`, { params });
+    return this.http.delete(`${this.emailApiUrl}/${emailId}`, {
+      params,
+      withCredentials: true
+    });
   }
 
-  /**
-   * Bulk delete emails from folder
-   * DELETE /api/emails/bulk-delete
-   */
   bulkDeleteFromFolder(emailIds: string[], folderId: string): Observable<any> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
     
     return this.http.request(
       'delete',
       `${this.emailApiUrl}/bulk-delete`,
       {
-        headers,
-        body: { emailIds, folderId: folder }
+        body: { emailIds, folderId: folder },
+        withCredentials: true
       }
     );
   }
 
-  /**
-   * Mark email as read in folder
-   */
   markAsRead(emailId: string): Observable<any> {
-    return this.http.patch(`${this.emailApiUrl}/${emailId}/read`, {});
+    return this.http.patch(`${this.emailApiUrl}/${emailId}/read`, {}, {
+      withCredentials: true
+    });
   }
 
-  /**
-   * Toggle star on email in folder
-   */
   toggleStar(emailId: string, folderId?: string): Observable<any> {
     let params = new HttpParams();
     if (folderId) {
       params = params.set('folderId', folderId);
     }
     
-    return this.http.patch(`${this.emailApiUrl}/${emailId}/star`, {}, { params });
+    return this.http.patch(`${this.emailApiUrl}/${emailId}/star`, {}, {
+      params,
+      withCredentials: true
+    });
   }
 }

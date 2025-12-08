@@ -30,7 +30,7 @@ export const routes: Routes = [
       { path: 'drafts', component: DraftListComponent },
       { path: 'trash', component: TrashListComponent },
       { path: 'contacts', component: ContactsComponent },
-      { path: 'folders', component: FoldersComponent },
+      { path: 'folders', component:FoldersPageComponent },
       { path: 'folder/:id', component: FolderViewComponent },
     ],
   },
