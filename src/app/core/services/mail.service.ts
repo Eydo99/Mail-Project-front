@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Email } from '../models/email.model';
+import {Attachment} from "../models/attachment";
 
 @Injectable({
   providedIn: 'root'
@@ -42,7 +43,8 @@ export class MailService {
       timestamp: new Date(email.timestamp),
       isStarred: email.starred,
       hasAttachment: email.hasAttachment,
-      priority: email.priority
+      priority: email.priority,
+      attachments: email.attachments || []  // ADD THIS LINE
     }));
   }
 
@@ -255,6 +257,73 @@ export class MailService {
       { responseType: 'text' }  // <-- This fixes the parsing issue
     );
   }
+
+  /**
+   * Get attachment file URL for viewing/downloading
+   */
+  /**
+   * Get attachment file URL for viewing/downloading
+   */
+  getAttachmentUrl(filePath: string): string {
+    // Extract just the filename from the full path
+    // Example: "data/uploads/filename.pdf" -> "filename.pdf"
+    const filename = filePath.split('/').pop() || filePath;
+
+    // Encode the filename to handle spaces and special characters
+    const encodedFilename = encodeURIComponent(filename);
+
+    return `http://localhost:8080/api/attachments/uploads/${encodedFilename}`;
+  }
+
+  /**
+   * Download attachment
+   */
+  downloadAttachment(attachment: Attachment): void {
+    const url = this.getAttachmentUrl(attachment.filePath);
+
+    // Create temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachment.filename;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  /**
+   * View attachment (open in new tab)
+   */
+  viewAttachment(attachment: Attachment): void {
+    const url = this.getAttachmentUrl(attachment.filePath);
+    window.open(url, '_blank');
+  }
+
+  /**
+   * Format file size to human-readable format
+   */
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  /**
+   * Get icon for file type
+   */
+  getFileIcon(mimeType: string): string {
+    if (mimeType.includes('pdf')) return 'assets/icons/pdf.png';
+    if (mimeType.includes('image')) return 'assets/icons/image.png';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'assets/icons/doc.png';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'assets/icons/excel.png';
+    if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'assets/icons/zip.png';
+    return 'assets/icons/file.png';
+  }
+
   /**
    * Get the BehaviorSubject for a specific folder
    */
