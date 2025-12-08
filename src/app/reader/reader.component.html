@@ -7,12 +7,7 @@
       </button>
 
       <div class="action-buttons">
-        <button class="action-btn" (click)="onReply()" title="Reply">
-          <img src="assets/icons/reply.png" alt="Reply" class="icon" />
-        </button>
-        <button class="action-btn" (click)="onForward()" title="Forward">
-          <img src="assets/icons/forward.png" alt="Forward" class="icon" />
-        </button>
+
       </div>
     </div>
 
@@ -37,31 +32,44 @@
       <div class="email-body">
         <p>{{ selectedEmail.body }}</p>
 
-        <!-- Simulate full email content -->
-        <p>
-          Thank you for your attention to this matter. I've reviewed the details
-          and would like to discuss further at your earliest convenience.
-        </p>
 
-        <p>
-          Please let me know if you have any questions or need additional information.
-        </p>
 
         <p>Best regards,<br/>{{ selectedEmail.sender }}</p>
       </div>
 
       <!-- Attachments (if any) -->
-      <div *ngIf="selectedEmail.hasAttachment" class="attachments">
-        <div class="attachment-label">Attachments</div>
-        <div class="attachment-item">
-          <img src="assets/icons/pdf.png" alt="PDF" class="attachment-icon" />
-          <span class="attachment-name">Q4_Report.pdf</span>
-          <span class="attachment-size">2.4 MB</span>
+      <!-- Attachments (if any) -->
+      <div *ngIf="selectedEmail.attachments && selectedEmail.attachments.length > 0" class="attachments">
+        <div class="attachment-label">
+          Attachments ({{ selectedEmail.attachments.length }})
+        </div>
+
+        <div *ngFor="let attachment of selectedEmail.attachments" class="attachment-item">
+          <img
+            src="assets/icons/pdf-file.png"
+            alt="File"
+            class="attachment-icon"
+          />
+          <div class="attachment-info">
+            <span class="attachment-name">{{ attachment.filename }}</span>
+            <span class="attachment-size">{{ formatFileSize(attachment.fileSize) }}</span>
+          </div>
+          <div class="attachment-actions">
+            <button
+              class="attachment-btn view-btn"
+              (click)="onViewAttachment(attachment)"
+              title="View"
+            >
+              <img src="assets/icons/search.png" alt="View" class="btn-icon" />
+            </button>
+
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Footer Actions -->
+
     <div class="reader-footer">
       <button class="reply-btn" (click)="onReply()">
         Reply
