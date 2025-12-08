@@ -225,10 +225,16 @@
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  position: relative;
 }
 
 .filters-btn:hover {
+  background: #234C6A;
+  color: white;
+}
+
+.filters-btn.active {
   background: #234C6A;
   color: white;
 }
@@ -394,15 +400,31 @@
   background: #234C6A;
 }
 
-/* Filter button icon */
+/* Filter button icon - adjusted size */
 .filter-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   stroke: #234C6A;
+  stroke-width: 2;
+  flex-shrink: 0;
 }
 
 .filters-btn:hover .filter-icon {
   stroke: white;
+}
+
+.filters-btn.active .filter-icon {
+  stroke: white;
+}
+
+/* Filter badge (red dot) */
+.filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  color: #ef4444;
+  font-size: 20px;
+  line-height: 1;
 }
 
 /* Email icons */
@@ -446,4 +468,90 @@
 .urgent-icon {
   stroke: #ef4444;
   fill: none;
+}
+/* Priority Circle Indicator */
+.priority-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Active Filters Badge */
+.filters-btn {
+  position: relative;
+}
+
+.filters-btn.active {
+  background: #234C6A;
+  color: white;
+}
+
+.filters-btn.active .filter-icon {
+  stroke: white;
+}
+
+.filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  color: #ef4444;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Active Filters Info Bar */
+.active-filters {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(35, 76, 106, 0.1) 0%, rgba(69, 104, 130, 0.1) 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 4px solid #234C6A;
+}
+
+.filter-info-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #234C6A;
+}
+
+.clear-filters-btn {
+  padding: 6px 14px;
+  background: white;
+  border: 1px solid #234C6A;
+  color: #234C6A;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-filters-btn:hover {
+  background: #234C6A;
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-message {
+  font-size: 18px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
 }

@@ -1,3 +1,5 @@
+import {Attachment} from "./attachment";
+
 export interface Email {
   id: string;
   sender: string;
@@ -5,9 +7,10 @@ export interface Email {
   subject: string;
   preview: string;
   body: string;
-  timestamp: string;
+  timestamp: Date;
   isStarred: boolean;
   hasAttachment: boolean;
   priority: number;
   folder?: string;
+  attachments?: Attachment[];  // ADD THIS LINE
 }

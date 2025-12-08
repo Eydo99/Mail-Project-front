@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { EmailItemComponent } from './email-item.component';
+import { FolderModalComponent } from './folder-modal.component';
 
-describe('EmailItemComponent', () => {
-  let component: EmailItemComponent;
-  let fixture: ComponentFixture<EmailItemComponent>;
+describe('FolderModalComponent', () => {
+  let component: FolderModalComponent;
+  let fixture: ComponentFixture<FolderModalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EmailItemComponent]
+      imports: [FolderModalComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(EmailItemComponent);
+    fixture = TestBed.createComponent(FolderModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

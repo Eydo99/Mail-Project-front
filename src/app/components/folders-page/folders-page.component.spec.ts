@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FiltersBarComponent } from './filters-bar.component';
+import { FoldersPageComponent } from './folders-page.component';
 
-describe('FiltersBarComponent', () => {
-  let component: FiltersBarComponent;
-  let fixture: ComponentFixture<FiltersBarComponent>;
+describe('FoldersPageComponent', () => {
+  let component: FoldersPageComponent;
+  let fixture: ComponentFixture<FoldersPageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FiltersBarComponent]
+      imports: [FoldersPageComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(FiltersBarComponent);
+    fixture = TestBed.createComponent(FoldersPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

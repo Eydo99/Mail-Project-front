@@ -83,11 +83,32 @@
   outline: none;
 }
 
+/* UPDATED: Add scrolling to contacts list */
 .contacts-list {
   background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  max-height: 600px; /* Fixed height for scrolling */
+  overflow-y: auto;
+}
+
+/* Scrollbar styling for contacts list */
+.contacts-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contacts-list::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.contacts-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.contacts-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .contact-item {
@@ -289,10 +310,16 @@
 }
 
 .email-field-group {
+  margin-bottom: 0.75rem;
   display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.email-field-group > div:first-child {
+  display: flex;
+  gap: 0.5rem;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
 }
 
 .email-input {
@@ -387,38 +414,6 @@
   background-color: #1e3a5f;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .sort-dropdown {
-    justify-content: space-between;
-  }
-
-  .contact-item {
-    flex-wrap: wrap;
-  }
-
-  .contact-actions {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
-
-  .email-field-group {
-    flex-wrap: wrap;
-  }
-
-  .email-input {
-    width: 100%;
-    flex-basis: 100%;
-  }
-
-  /* Add these styles to your existing CSS file */
-
 /* Required field indicator */
 .required {
   color: #ef4444;
@@ -459,17 +454,33 @@
   }
 }
 
-/* Adjust email field group to accommodate error messages */
-.email-field-group {
-  margin-bottom: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.email-field-group > div:first-child {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
+  .sort-dropdown {
+    justify-content: space-between;
+  }
+
+  .contact-item {
+    flex-wrap: wrap;
+  }
+
+  .contact-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .email-field-group > div:first-child {
+    flex-wrap: wrap;
+  }
+
+  .email-input {
+    width: 100%;
+    flex-basis: 100%;
+  }
 }

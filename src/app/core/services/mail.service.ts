@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Email } from '../models/email.model';
+import {Attachment} from "../models/attachment";
 
 @Injectable({
   providedIn: 'root'
@@ -34,26 +35,39 @@ export class MailService {
   private mapBackendToFrontend(backendEmails: any[]): Email[] {
     return backendEmails.map(email => ({
       id: email.id.toString(),
-      sender: this.extractSenderName(email.to),
-      senderEmail: email.to[0] || 'unknown@mail.com',
+      sender: this.extractSenderName(email.from),
+      senderEmail: email.from || 'unknown@mail.com',
       subject: email.subject,
       preview: email.preview,
       body: email.body,
-      timestamp: email.timestamp,
+      timestamp: new Date(email.timestamp),
       isStarred: email.starred,
       hasAttachment: email.hasAttachment,
-      priority: email.priority
+      priority: email.priority,
+      attachments: email.attachments || []  // ADD THIS LINE
     }));
   }
 
   /**
    * Extract sender name from email
    */
-  private extractSenderName(recipients: string[]): string {
-    if (!recipients || recipients.length === 0) return 'Unknown';
-    const email = recipients[0];
-    const name = email.split('@')[0];
-    return name.charAt(0).toUpperCase() + name.slice(1);
+  private extractSenderName(from: string[] | string): string {
+    if (!from) return 'Unknown';
+
+    // Handle if 'from' is a string
+    if (typeof from === 'string') {
+      const name = from.split('@')[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    // Handle if 'from' is an array
+    if (Array.isArray(from) && from.length > 0) {
+      const email = from[0];
+      const name = email.split('@')[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    return 'Unknown';
   }
 
   /**
@@ -75,7 +89,7 @@ export class MailService {
    * Get emails for a specific folder (returns observable)
    */
   getEmails(folder: string = 'inbox'): Observable<Email[]> {
-    switch(folder) {
+    switch (folder) {
       case 'inbox':
         return this.inboxEmails$;
       case 'sent':
@@ -96,7 +110,7 @@ export class MailService {
     return this.http.get<any[]>(`${this.apiUrl}/${folder}`).pipe(
       map(emails => this.mapBackendToFrontend(emails)),
       tap(emails => {
-        switch(folder) {
+        switch (folder) {
           case 'inbox':
             this.inboxEmailsSubject.next(emails);
             break;
@@ -119,6 +133,16 @@ export class MailService {
    */
   getInboxEmails(): Observable<Email[]> {
     return this.refreshFolder('inbox');
+  }
+
+  /**
+   * Get inbox emails sorted by priority (using backend Priority Queue)
+   */
+  getInboxEmailsByPriority(): Observable<Email[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/inbox/priority`).pipe(
+      map(emails => this.mapBackendToFrontend(emails)),
+      tap(emails => this.inboxEmailsSubject.next(emails))
+    );
   }
 
   /**
@@ -195,9 +219,24 @@ export class MailService {
   /**
    * Compose/send a new email
    */
+  /**
+  * Compose/send a new email
+  */
   composeMail(email: any): Observable<string> {
-    return this.http.post<string>(`${this.apiUrl}/compose`, email);
+    return this.http.post(`${this.apiUrl}/compose`, email, {
+      responseType: 'text'
+    });
   }
+
+  /**
+   * Save email as draft
+   */
+  saveDraft(email: any): Observable<string> {
+    return this.http.post(`${this.apiUrl}/draft/save`, email, {
+      responseType: 'text'
+    });
+  }
+
 
   /**
    * Delete an email
@@ -212,17 +251,84 @@ export class MailService {
    * Move email to another folder
    */
   moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
-    return this.http.put<string>(
+    return this.http.put(
       `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
-      {}
+      {},
+      { responseType: 'text' }  // <-- This fixes the parsing issue
     );
+  }
+
+  /**
+   * Get attachment file URL for viewing/downloading
+   */
+  /**
+   * Get attachment file URL for viewing/downloading
+   */
+  getAttachmentUrl(filePath: string): string {
+    // Extract just the filename from the full path
+    // Example: "data/uploads/filename.pdf" -> "filename.pdf"
+    const filename = filePath.split('/').pop() || filePath;
+
+    // Encode the filename to handle spaces and special characters
+    const encodedFilename = encodeURIComponent(filename);
+
+    return `http://localhost:8080/api/attachments/uploads/${encodedFilename}`;
+  }
+
+  /**
+   * Download attachment
+   */
+  downloadAttachment(attachment: Attachment): void {
+    const url = this.getAttachmentUrl(attachment.filePath);
+
+    // Create temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachment.filename;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  /**
+   * View attachment (open in new tab)
+   */
+  viewAttachment(attachment: Attachment): void {
+    const url = this.getAttachmentUrl(attachment.filePath);
+    window.open(url, '_blank');
+  }
+
+  /**
+   * Format file size to human-readable format
+   */
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  /**
+   * Get icon for file type
+   */
+  getFileIcon(mimeType: string): string {
+    if (mimeType.includes('pdf')) return 'assets/icons/pdf.png';
+    if (mimeType.includes('image')) return 'assets/icons/image.png';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'assets/icons/doc.png';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'assets/icons/excel.png';
+    if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'assets/icons/zip.png';
+    return 'assets/icons/file.png';
   }
 
   /**
    * Get the BehaviorSubject for a specific folder
    */
   private getSubjectByFolder(folder: string): BehaviorSubject<Email[]> {
-    switch(folder) {
+    switch (folder) {
       case 'inbox':
         return this.inboxEmailsSubject;
       case 'sent':
