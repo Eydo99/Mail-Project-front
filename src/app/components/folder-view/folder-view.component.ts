@@ -126,7 +126,7 @@ export class FolderViewComponent implements OnInit {
   onEmailClick(email: Email): void {
     // Use FolderService for marking as read (no folder parameter needed)
     this.folderService.markAsRead(email.id).subscribe();
-    this.emailStateService.selectEmail(email);
+    this.emailStateService.selectEmail(email,this.filteredEmails);
   }
 
   toggleStar(event: Event, email: Email): void {

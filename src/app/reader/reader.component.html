@@ -7,7 +7,26 @@
       </button>
 
       <div class="action-buttons">
-
+        <!-- Navigation buttons -->
+        <button 
+          class="action-btn nav-btn" 
+          (click)="onPreviousEmail()" 
+          [disabled]="!canGoPrevious"
+          title="Previous email">
+          <span class="nav-icon">←</span>
+        </button>
+        
+        <div class="email-counter">
+          {{ currentIndex + 1 }} / {{ totalEmails }}
+        </div>
+        
+        <button 
+          class="action-btn nav-btn" 
+          (click)="onNextEmail()" 
+          [disabled]="!canGoNext"
+          title="Next email">
+          <span class="nav-icon">→</span>
+        </button>
       </div>
     </div>
 
@@ -32,12 +51,9 @@
       <div class="email-body">
         <p>{{ selectedEmail.body }}</p>
 
-
-
         <p>Best regards,<br/>{{ selectedEmail.sender }}</p>
       </div>
 
-      <!-- Attachments (if any) -->
       <!-- Attachments (if any) -->
       <div *ngIf="selectedEmail.attachments && selectedEmail.attachments.length > 0" class="attachments">
         <div class="attachment-label">
@@ -62,14 +78,12 @@
             >
               <img src="assets/icons/search.png" alt="View" class="btn-icon" />
             </button>
-
           </div>
         </div>
       </div>
     </div>
 
     <!-- Footer Actions -->
-
     <div class="reader-footer">
       <button class="reply-btn" (click)="onReply()">
         Reply

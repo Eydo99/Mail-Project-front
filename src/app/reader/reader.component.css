@@ -72,6 +72,7 @@
 .action-buttons {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .action-btn {
@@ -88,9 +89,37 @@
   font-size: 16px;
 }
 
-.action-btn:hover {
-  background: #f5f5f5;
+.action-btn:hover:not(:disabled) {
+  background: #234C6A;
   border-color: #234C6A;
+}
+
+.action-btn:hover:not(:disabled) .nav-icon {
+  color: white;
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.nav-btn {
+  font-weight: bold;
+}
+
+.nav-icon {
+  font-size: 18px;
+  color: #234C6A;
+  transition: color 0.2s;
+}
+
+.email-counter {
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
 }
 
 .icon {
@@ -180,10 +209,10 @@
 .attachment-label {
   font-size: 13px;
   font-weight: 600;
-  color: #666;
+  color: #6b7280;
+  margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
 }
 
 .attachment-item {
@@ -191,33 +220,74 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
-  border: 1px solid #e5e5e5;
+  background: #f9fafb;
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-bottom: 8px;
+  transition: background 0.2s;
 }
 
 .attachment-item:hover {
-  background: #f0f0f0;
-  border-color: #234C6A;
+  background: #f3f4f6;
 }
 
 .attachment-icon {
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
+}
+
+.attachment-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .attachment-name {
-  flex: 1;
   font-size: 14px;
   font-weight: 500;
-  color: #2c2c2c;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .attachment-size {
   font-size: 12px;
-  color: #999;
+  color: #6b7280;
+}
+
+.attachment-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.attachment-btn {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachment-btn:hover {
+  background: #234C6A;
+  border-color: #234C6A;
+}
+
+.attachment-btn .btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.attachment-btn:hover .btn-icon {
+  filter: brightness(0) invert(1);
 }
 
 /* Footer */
@@ -321,89 +391,4 @@
     z-index: 50;
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
   }
-}
-
-/* Attachment styling updates */
-.attachment-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  transition: background 0.2s;
-}
-
-.attachment-item:hover {
-  background: #f3f4f6;
-}
-
-.attachment-icon {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-.attachment-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.attachment-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.attachment-size {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.attachment-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.attachment-btn {
-  padding: 8px;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.attachment-btn:hover {
-  background: #234C6A;
-  border-color: #234C6A;
-}
-
-.attachment-btn .btn-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.attachment-btn:hover .btn-icon {
-  filter: brightness(0) invert(1);
-}
-
-.attachment-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }

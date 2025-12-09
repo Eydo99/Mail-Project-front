@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EmailStateService } from '../core/services/email-state.service';
 import { Email } from '../core/models/email.model';
-import {Attachment} from "../core/models/attachment";
-import {MailService} from "../core/services/mail.service";
+import { Attachment } from "../core/models/attachment";
+import { MailService } from "../core/services/mail.service";
 
 @Component({
   selector: 'app-reader',
@@ -15,25 +15,52 @@ import {MailService} from "../core/services/mail.service";
 export class ReaderComponent implements OnInit {
   selectedEmail: Email | null = null;
   isOpen: boolean = false;
+  currentIndex: number = -1;
+  totalEmails: number = 0;
+  canGoNext: boolean = false;
+  canGoPrevious: boolean = false;
 
   constructor(
     private emailStateService: EmailStateService,
-    private mailService: MailService  // ADD THIS
+    private mailService: MailService
   ) {}
-
 
   ngOnInit(): void {
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmail = email;
+      this.updateNavigationState();
     });
 
     this.emailStateService.readerOpen$.subscribe(isOpen => {
       this.isOpen = isOpen;
     });
+
+    this.emailStateService.currentIndex$.subscribe(index => {
+      this.currentIndex = index;
+      this.updateNavigationState();
+    });
+
+    this.emailStateService.currentEmailList$.subscribe(list => {
+      this.totalEmails = list.length;
+      this.updateNavigationState();
+    });
+  }
+
+  updateNavigationState(): void {
+    this.canGoNext = this.emailStateService.canNavigateNext();
+    this.canGoPrevious = this.emailStateService.canNavigatePrevious();
   }
 
   closeReader(): void {
     this.emailStateService.closeReader();
+  }
+
+  onNextEmail(): void {
+    this.emailStateService.navigateToNext();
+  }
+
+  onPreviousEmail(): void {
+    this.emailStateService.navigateToPrevious();
   }
 
   onReply(): void {
@@ -68,7 +95,6 @@ export class ReaderComponent implements OnInit {
     this.closeReader();
   }
 
-  // Add this temporarily to debug
   debugAttachment(attachment: Attachment): void {
     console.log('Attachment details:', {
       filename: attachment.filename,

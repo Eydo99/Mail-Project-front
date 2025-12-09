@@ -43,6 +43,7 @@ export class InboxListComponent implements OnInit {
   filteredEmails: Email[] = [];
   selectedEmailId: string | null = null;
 
+
   // Search, Sort, Filter
   searchQuery: string = '';
   sortCriteria: SortCriteria = { field: 'date', direction: 'desc' };
@@ -161,7 +162,7 @@ export class InboxListComponent implements OnInit {
    */
   onEmailClick(email: Email): void {
     this.mailService.markAsRead(email.id);
-    this.emailStateService.selectEmail(email);
+    this.emailStateService.selectEmail(email,this.filteredEmails);
   }
 
   /**

@@ -85,7 +85,7 @@ export class TrashListComponent implements OnInit {
 
   onEmailClick(email: Email): void {
     this.mailService.markAsRead(email.id);
-    this.emailStateService.selectEmail(email);
+    this.emailStateService.selectEmail(email,this.filteredEmails);
   }
 
   toggleStar(event: Event, email: Email): void {

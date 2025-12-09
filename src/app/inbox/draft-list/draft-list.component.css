@@ -263,10 +263,13 @@
 }
 
 .email-item.selected {
-  background: rgba(69, 104, 130, 0.15) !important;
-  border-left: 4px solid #234C6A;
+  background: #E8F0F7 !important;
+  border-left: 4px solid #234C6A !important;
 }
 
+.email-item.selected:hover {
+  background: #D9E7F3 !important;
+}
 .email-item.checkbox-selected {
   background: rgba(139, 69, 19, 0.1);
 }
