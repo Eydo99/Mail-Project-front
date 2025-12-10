@@ -1,10 +1,11 @@
-// folders-page.component.ts
+// folders-page.component.ts - UPDATED with count recalculation
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Plus, Folder, Mail, Edit, Trash2 } from 'lucide-angular';
 import { FolderService } from '../../core/services/folder.service';
 import { FolderModalComponent, FolderData } from '../../components/folder-modal/folder-modal.component';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-folders-page',
@@ -37,6 +38,53 @@ export class FoldersPageComponent implements OnInit {
   loadFolders(): void {
     this.folderService.getAllFolders().subscribe(folders => {
       this.folders = folders;
+      // Recalculate counts for all folders
+      this.recalculateFolderCounts();
+    });
+  }
+
+  /**
+   * Recalculate email counts for all folders by counting actual emails
+   */
+  recalculateFolderCounts(): void {
+    if (this.folders.length === 0) return;
+
+    // Create an array of observables to get emails for each folder
+    const countUpdates = this.folders.map(folder => {
+      return this.folderService.getEmailsByFolder(folder.id!);
+    });
+
+    // Execute all requests in parallel
+    forkJoin(countUpdates).subscribe({
+      next: (results) => {
+        // Update each folder's count if it's different
+        let needsReload = false;
+
+        results.forEach((emails, index) => {
+          const folder = this.folders[index];
+          const actualCount = emails.length;
+
+          if (folder.emailCount !== actualCount) {
+            needsReload = true;
+            // Update the count in backend
+            this.folderService.updateFolderCount(folder.id!, actualCount).subscribe({
+              error: (error) => console.error(`Error updating count for folder ${folder.name}:`, error)
+            });
+          }
+        });
+
+        // Reload folders if any counts were updated
+        if (needsReload) {
+          setTimeout(() => {
+            this.folderService.getAllFolders().subscribe(folders => {
+              this.folders = folders;
+            });
+          }, 500); // Small delay to ensure backend updates are complete
+        }
+      },
+      error: (error) => {
+        console.error('Error recalculating folder counts:', error);
+      }
     });
   }
 

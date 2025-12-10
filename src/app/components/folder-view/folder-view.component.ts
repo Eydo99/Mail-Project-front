@@ -13,11 +13,12 @@ import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X, Edit, ArrowLeft } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
 import {FolderData} from "../folder-modal/folder-modal.component";
+import {FilterModalComponent} from "../filter-modal/filter-modal.component";
 
 @Component({
   selector: 'app-folder-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, PaginationComponent, FilterModalComponent],
   templateUrl: './folder-view.component.html',
   styleUrls: ['./folder-view.component.css']
 })
@@ -47,19 +48,20 @@ export class FolderViewComponent implements OnInit {
 
   allEmails: Email[] = [];
   filteredEmails: Email[] = [];
-  searchQuery: string = '';
   selectedEmailId: string | null = null;
 
-  // Sort & Filter
-  sortField: SortCriteria['field'] = 'date';
-  sortDirection: SortCriteria['direction'] = 'desc';
+  // Search, Sort, Filter
+  searchQuery: string = '';
+  sortCriteria: SortCriteria = { field: 'date', direction: 'desc' };
+  filterCriteria: FilterCriteria = {};
+  hasActiveFilters: boolean = false;
   showFilterModal: boolean = false;
-  activeFilters: FilterCriteria = {};
 
-  // Selection
+  // Selection for action bar
   selectedEmails: Set<string> = new Set();
   showActionBar: boolean = false;
   moveToFolder: string = '';
+
 
   ///
   folders: FolderData[] = [];
@@ -155,38 +157,80 @@ export class FolderViewComponent implements OnInit {
     });
   }
 
+  /**
+   * Apply filters and sorting
+   */
+  applyFiltersAndSort(): void {
+    // Apply search as part of filter criteria
+    const criteria: FilterCriteria = {
+      ...this.filterCriteria,
+      searchTerm: this.searchQuery
+    };
+
+    // Process emails through filter service
+    this.filteredEmails = this.emailFilterService.processEmails(
+      this.allEmails,
+      criteria,
+      this.sortCriteria
+    );
+
+    // Check if filters are active
+    this.hasActiveFilters = this.emailFilterService.hasActiveFilters(criteria);
+
+    // Update pagination
+    this.totalItems = this.filteredEmails.length;
+    this.updatePagination();
+  }
+
+  /**
+   * Handle search input
+   */
   onSearch(query: string): void {
     this.searchQuery = query;
-    this.activeFilters.searchTerm = query;
     this.currentPage = 1;
     this.applyFiltersAndSort();
   }
 
+  /**
+   * Handle sort change
+   */
   onSortChange(value: string): void {
     const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
-    this.sortField = field;
-    this.sortDirection = direction;
+    this.sortCriteria = { field, direction };
     this.applyFiltersAndSort();
   }
 
+  /**
+   * Open filter modal
+   */
   openFilterModal(): void {
     this.showFilterModal = true;
   }
 
-  applyFiltersAndSort(): void {
-    const sortCriteria: SortCriteria = {
-      field: this.sortField,
-      direction: this.sortDirection
-    };
+  /**
+   * Close filter modal
+   */
+  closeFilterModal(): void {
+    this.showFilterModal = false;
+  }
 
-    this.filteredEmails = this.emailFilterService.processEmails(
-      this.allEmails,
-      this.activeFilters,
-      sortCriteria
-    );
+  /**
+   * Apply filters from modal
+   */
+  onApplyFilters(criteria: FilterCriteria): void {
+    this.filterCriteria = criteria;
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
+  }
 
-    this.totalItems = this.filteredEmails.length;
-    this.updatePagination();
+  /**
+   * Clear all filters
+   */
+  clearAllFilters(): void {
+    this.filterCriteria = {};
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.applyFiltersAndSort();
   }
 
   // Pagination

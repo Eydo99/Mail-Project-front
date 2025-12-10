@@ -299,6 +299,10 @@ lucide-icon {
 
 /* new email button */
 .new-message-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   padding: 12px;
   background: #234C6A;
   color: white;
@@ -315,13 +319,50 @@ lucide-icon {
   filter: brightness(1.05);
 }
 
+/* Icon inside new message button */
+.new-message-btn .compose-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.new-message-btn .compose-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: white;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+/* Button text */
+.new-message-btn .btn-text {
+  white-space: nowrap;
+}
+
 /* collapsed new message */
 .sidebar.closed .new-message-btn {
-  font-size: 0;
-  padding: 8px;
-  width: 45px;
-  height: 45px;
-  justify-content:flex-start;
+  padding: 12px;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  gap: 0;
+}
+
+.sidebar.closed .new-message-btn .btn-text {
+  display: none;
+}
+
+.sidebar.closed .new-message-btn .compose-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar.closed .new-message-btn .compose-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 
