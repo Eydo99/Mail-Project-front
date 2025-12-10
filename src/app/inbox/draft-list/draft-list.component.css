@@ -238,6 +238,7 @@
   background: #234C6A;
   color: white;
 }
+
 /* Email List */
 .email-list {
   flex: 1;
@@ -428,6 +429,7 @@
   font-size: 20px;
   line-height: 1;
 }
+
 /* Email icons */
 .icon {
   width: 16px;
@@ -470,7 +472,15 @@
   stroke: #ef4444;
   fill: none;
 }
-
+/* Priority Circle Indicator */
+.priority-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
 
 /* Active Filters Badge */
 .filters-btn {

@@ -10,6 +10,8 @@ import { SortCriteria } from '../../core/models/SortCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
 import { FilterModalComponent } from '../../components/filter-modal/filter-modal.component';
+import {FolderData} from "../../components/folder-modal/folder-modal.component";
+import {FolderService} from "../../core/services/folder.service";
 
 @Component({
   selector: 'app-sent-list',
@@ -55,21 +57,32 @@ export class SentListComponent implements OnInit {
   showActionBar: boolean = false;
   moveToFolder: string = '';
 
+  ///
+  folders: FolderData[] = [];
+///
+
   constructor(
     private mailService: MailService,
     private emailStateService: EmailStateService,
-    private emailFilterService: EmailFilterService
+    private emailFilterService: EmailFilterService,
+    private folderService: FolderService //
   ) {}
 
   ngOnInit(): void {
     this.loadEmails();
-
+    this.loadFolders(); //
     // Track which email is selected
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
   }
-
+  ///
+  loadFolders(): void {
+    this.folderService.getAllFolders().subscribe(folders => {
+      this.folders = folders;
+    });
+  }
+///
   /**
    * Load emails for this folder
    */
@@ -168,7 +181,7 @@ export class SentListComponent implements OnInit {
     event.stopPropagation();
     this.mailService.toggleStar(email.id, this.folderName);
   }
-  
+
   // ============== PAGINATION ==============
 
   onPageChange(page: number): void {
@@ -317,6 +330,16 @@ export class SentListComponent implements OnInit {
       alert(message);
     } else {
       alert(`Failed to ${action} emails`);
+    }
+  }
+
+  getPriorityColor(priority: number): string {
+    switch(priority) {
+      case 1: return '#dc2626'; // Red - Urgent
+      case 2: return '#ea580c'; // Orange - High
+      case 3: return '#ca8a04'; // Yellow - Medium
+      case 4: return '#65a30d'; // Green - Low
+      default: return '#9ca3af'; // Gray - Default
     }
   }
 }

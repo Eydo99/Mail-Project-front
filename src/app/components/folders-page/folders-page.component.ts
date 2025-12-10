@@ -87,7 +87,7 @@ export class FoldersPageComponent implements OnInit {
         description: folderData.description,
         color: folderData.color
       };
-      
+
       this.folderService.createFolder(request).subscribe({
         next: (newFolder) => {
           this.loadFolders();
@@ -112,7 +112,7 @@ export class FoldersPageComponent implements OnInit {
         description: folderData.description,
         color: folderData.color
       };
-      
+
       this.folderService.updateFolder(folderData.id, request).subscribe({
         next: () => {
           this.loadFolders();

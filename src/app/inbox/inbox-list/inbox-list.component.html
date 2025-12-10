@@ -26,7 +26,9 @@
           <option value="inbox" *ngIf="folderName !== 'inbox'">Inbox</option>
           <option value="sent" *ngIf="folderName !== 'sent'">Sent</option>
           <option value="draft" *ngIf="folderName !== 'draft'">Draft</option>
-          <option value="trash" *ngIf="folderName !== 'trash'">Trash</option>
+          <div *ngFor="let folder of folders">
+            <option [value]="'folder_' + folder.id" >{{folder.name}}</option>
+          </div>
         </select>
 
         <button class="action-btn move-btn" (click)="moveSelectedEmails()" [disabled]="!moveToFolder">
@@ -69,8 +71,8 @@
         <option value="priority-desc">Priority (High to Low)</option>
       </select>
 
-      <button 
-        class="filters-btn" 
+      <button
+        class="filters-btn"
         [class.active]="hasActiveFilters"
         (click)="openFilterModal()"
       >

@@ -8,21 +8,21 @@
 
       <div class="action-buttons">
         <!-- Navigation buttons -->
-        <button 
-          class="action-btn nav-btn" 
-          (click)="onPreviousEmail()" 
+        <button
+          class="action-btn nav-btn"
+          (click)="onPreviousEmail()"
           [disabled]="!canGoPrevious"
           title="Previous email">
           <span class="nav-icon">←</span>
         </button>
-        
+
         <div class="email-counter">
           {{ currentIndex + 1 }} / {{ totalEmails }}
         </div>
-        
-        <button 
-          class="action-btn nav-btn" 
-          (click)="onNextEmail()" 
+
+        <button
+          class="action-btn nav-btn"
+          (click)="onNextEmail()"
           [disabled]="!canGoNext"
           title="Next email">
           <span class="nav-icon">→</span>

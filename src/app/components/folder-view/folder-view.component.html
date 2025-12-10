@@ -17,7 +17,9 @@
           <option value="inbox">Inbox</option>
           <option value="sent">Sent</option>
           <option value="draft">Draft</option>
-          <option value="trash">Trash</option>
+          <div *ngFor="let folder of folders">
+            <option [value]="'folder_' + folder.id" *ngIf="title !== folder.name" >{{folder.name}}</option>
+          </div>
         </select>
 
         <button class="action-btn move-btn" (click)="moveSelectedEmails()" [disabled]="!moveToFolder">
@@ -38,12 +40,12 @@
       <button class="back-btn" (click)="goBack()">
         <lucide-icon [img]="ArrowLeft" class="back-icon"></lucide-icon>
       </button>
-      <h1 class="inbox-title" [style.color]="folderColor">{{ folderName }}</h1>
+      <h1 class="inbox-title" [style.color]="folderColor">{{ title }}</h1>
       <button class="edit-folder-btn" (click)="editFolder()" title="Edit folder">
         <lucide-icon [img]="Edit" class="edit-icon"></lucide-icon>
       </button>
     </div>
-    
+
     <p class="folder-description" *ngIf="folderDescription">{{ folderDescription }}</p>
 
     <div class="inbox-toolbar">
@@ -93,6 +95,11 @@
 
       <div class="email-content">
         <div class="email-header">
+          <!-- Priority Circle -->
+          <span
+            class="priority-circle"
+            [style.background-color]="getPriorityColor(email.priority)"
+          ></span>
           <span class="email-sender">{{ email.sender }}</span>
 
           <lucide-icon
