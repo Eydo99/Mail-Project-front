@@ -10,6 +10,8 @@ import { SortCriteria } from '../../core/models/SortCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
 import { FilterModalComponent } from "../../components/filter-modal/filter-modal.component";
+import {FolderData} from "../../components/folder-modal/folder-modal.component";
+import {FolderService} from "../../core/services/folder.service";
 
 @Component({
   selector: 'app-inbox-list',
@@ -56,18 +58,29 @@ export class InboxListComponent implements OnInit {
   showActionBar: boolean = false;
   moveToFolder: string = '';
 
+  ///
+  folders: FolderData[] = [];
+///
+
   constructor(
     private mailService: MailService,
     private emailStateService: EmailStateService,
-    private emailFilterService: EmailFilterService
+    private emailFilterService: EmailFilterService,
+    private folderService: FolderService //
   ) {}
 
   ngOnInit(): void {
     this.loadEmails();
-
+    this.loadFolders(); //
     // Track selected email
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
+    });
+  }
+
+  loadFolders(): void {
+    this.folderService.getAllFolders().subscribe(folders => {
+      this.folders = folders;
     });
   }
 

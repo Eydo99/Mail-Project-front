@@ -26,7 +26,9 @@
           <option value="inbox" *ngIf="folderName !== 'inbox'">Inbox</option>
           <option value="sent" *ngIf="folderName !== 'sent'">Sent</option>
           <option value="draft" *ngIf="folderName !== 'draft'">Draft</option>
-          <option value="trash" *ngIf="folderName !== 'trash'">Trash</option>
+          <div *ngFor="let folder of folders">
+            <option [value]="'folder_' + folder.id" >{{folder.name}}</option>
+          </div>
         </select>
 
         <button class="action-btn move-btn" (click)="moveSelectedEmails()" [disabled]="!moveToFolder">
@@ -69,8 +71,8 @@
         <option value="subject-desc">Subject (Z-A)</option>
       </select>
 
-            <button 
-        class="filters-btn" 
+            <button
+        class="filters-btn"
         [class.active]="hasActiveFilters"
         (click)="openFilterModal()"
       >
@@ -90,7 +92,7 @@
 
   </div>
 
-  
+
 
   <!-- Email List -->
   <div class="email-list">
@@ -110,6 +112,11 @@
 
       <div class="email-content">
         <div class="email-header">
+          <!-- Priority Circle -->
+          <span
+            class="priority-circle"
+            [style.background-color]="getPriorityColor(email.priority)"
+          ></span>
           <span class="email-sender">{{ email.sender }}</span>
 
           <!-- Star Icon -->

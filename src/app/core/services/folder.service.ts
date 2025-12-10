@@ -3,7 +3,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {map, Observable, tap} from 'rxjs';
 import { Email } from '../models/email.model';
 
 export interface FolderData {
@@ -60,9 +60,44 @@ export class FolderService {
   }
 
   getEmailsByFolder(folderId: string): Observable<Email[]> {
-    return this.http.get<Email[]>(`${this.apiUrl}/${folderId}/emails`, {
+    return this.http.get<any[]>(`${this.apiUrl}/${folderId}/emails`, {
       withCredentials: true
-    });
+    }).pipe(
+      map(emails => this.mapBackendToFrontend(emails)),
+    );
+  }
+  private mapBackendToFrontend(backendEmails: any[]): Email[] {
+    return backendEmails.map(email => ({
+      id: email.id.toString(),
+      sender: this.extractSenderName(email.from),
+      senderEmail: email.from || 'unknown@mail.com',
+      subject: email.subject,
+      preview: email.preview,
+      body: email.body,
+      timestamp: new Date(email.timestamp),
+      isStarred: email.starred,
+      hasAttachment: email.hasAttachment,
+      priority: email.priority,
+      attachments: email.attachments || []  // ADD THIS LINE
+    }));
+  }
+  private extractSenderName(from: string[] | string): string {
+    if (!from) return 'Unknown';
+
+    // Handle if 'from' is a string
+    if (typeof from === 'string') {
+      const name = from.split('@')[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    // Handle if 'from' is an array
+    if (Array.isArray(from) && from.length > 0) {
+      const email = from[0];
+      const name = email.split('@')[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    return 'Unknown';
   }
 
   updateFolderCount(folderId: string, count: number): Observable<void> {
@@ -79,7 +114,7 @@ export class FolderService {
 
   moveEmailToFolder(emailId: string, fromFolder: string, toFolderId: string): Observable<any> {
     const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
-    
+
     return this.http.put(
       `${this.emailApiUrl}/${emailId}/move`,
       { fromFolder, toFolder },
@@ -89,7 +124,7 @@ export class FolderService {
 
   bulkMoveToFolder(emailIds: string[], fromFolder: string, toFolderId: string): Observable<any> {
     const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
-    
+
     return this.http.put(
       `${this.emailApiUrl}/bulk-move`,
       { emailIds, fromFolder, toFolder },
@@ -100,7 +135,7 @@ export class FolderService {
   deleteEmailFromFolder(emailId: string, folderId: string): Observable<any> {
     const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
     const params = new HttpParams().set('folder', folder);
-    
+
     return this.http.delete(`${this.emailApiUrl}/${emailId}`, {
       params,
       withCredentials: true
@@ -109,7 +144,7 @@ export class FolderService {
 
   bulkDeleteFromFolder(emailIds: string[], folderId: string): Observable<any> {
     const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
-    
+
     return this.http.request(
       'delete',
       `${this.emailApiUrl}/bulk-delete`,
@@ -131,7 +166,7 @@ export class FolderService {
     if (folderId) {
       params = params.set('folderId', folderId);
     }
-    
+
     return this.http.patch(`${this.emailApiUrl}/${emailId}/star`, {}, {
       params,
       withCredentials: true

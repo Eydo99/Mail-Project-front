@@ -12,6 +12,7 @@ import { SortCriteria } from '../../core/models/SortCriteria';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X, Edit, ArrowLeft } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
+import {FolderData} from "../folder-modal/folder-modal.component";
 
 @Component({
   selector: 'app-folder-view',
@@ -23,6 +24,7 @@ import { PaginationComponent } from "../../components/pagination/pagination.comp
 export class FolderViewComponent implements OnInit {
   folderId: string = '';
   folderName: string = '';
+  title: string = '';
   folderDescription: string = '';
   folderColor: string = '#3b82f6';
 
@@ -59,6 +61,10 @@ export class FolderViewComponent implements OnInit {
   showActionBar: boolean = false;
   moveToFolder: string = '';
 
+  ///
+  folders: FolderData[] = [];
+///
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -73,13 +79,18 @@ export class FolderViewComponent implements OnInit {
       this.folderId = params['id'];
       this.loadFolderDetails();
       this.loadEmails();
+      this.loadFolders(); //
     });
 
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
   }
-
+  loadFolders(): void {
+    this.folderService.getAllFolders().subscribe(folders => {
+      this.folders = folders;
+    });
+  }
   /**
    * Load folder metadata from backend using FolderService
    */
@@ -87,7 +98,8 @@ export class FolderViewComponent implements OnInit {
     this.folderService.getFolderById(this.folderId).subscribe({
       next: (folder) => {
         if (folder) {
-          this.folderName = folder.name;
+          this.folderName = "folder_"+folder.id;
+          this.title=folder.name;
           this.folderDescription = folder.description || '';
           this.folderColor = folder.color;
         }
@@ -125,7 +137,8 @@ export class FolderViewComponent implements OnInit {
 
   onEmailClick(email: Email): void {
     // Use FolderService for marking as read (no folder parameter needed)
-    this.folderService.markAsRead(email.id).subscribe();
+    console.log('Clicked email:', email);
+   // this.folderService.markAsRead(email.id);
     this.emailStateService.selectEmail(email,this.filteredEmails);
   }
 
@@ -219,7 +232,7 @@ export class FolderViewComponent implements OnInit {
   }
 
   areAllSelected(): boolean {
-    return this.paginatedEmails.length > 0 && 
+    return this.paginatedEmails.length > 0 &&
            this.paginatedEmails.every(email => this.selectedEmails.has(email.id));
   }
 
@@ -244,12 +257,12 @@ export class FolderViewComponent implements OnInit {
   // Actions - Use FolderService instead of MailService
   deleteSelectedEmails(): void {
     if (this.selectedEmails.size === 0) return;
-    
+
     const confirmed = confirm(`Move ${this.selectedEmails.size} email(s) to trash?`);
     if (!confirmed) return;
 
     const selectedIds = Array.from(this.selectedEmails);
-    
+
     // Use FolderService for bulk delete
     this.folderService.bulkDeleteFromFolder(selectedIds, this.folderId).subscribe({
       next: () => {
@@ -265,21 +278,55 @@ export class FolderViewComponent implements OnInit {
   }
 
   moveSelectedEmails(): void {
-    if (this.selectedEmails.size === 0 || !this.moveToFolder) return;
-    
+    if (this.selectedEmails.size === 0 || !this.moveToFolder) {
+      alert('Please select a folder');
+      return;
+    }
+
     const selectedIds = Array.from(this.selectedEmails);
-    
-    // Use FolderService for bulk move
-    this.folderService.bulkMoveToFolder(selectedIds, `folder_${this.folderId}`, this.moveToFolder).subscribe({
-      next: () => {
-        alert(`${selectedIds.length} email(s) moved successfully`);
-        this.loadEmails(); // Reload emails from backend
-        this.closeActionBar();
-      },
-      error: (error) => {
-        console.error('Error moving emails:', error);
-        alert('Failed to move emails');
-      }
+    let completedRequests = 0;
+    let successCount = 0;
+     console.log(this.folderName);
+    selectedIds.forEach(emailId => {
+      this.mailService.moveEmail(emailId, this.folderName, this.moveToFolder).subscribe({
+        next: () => {
+          successCount++;
+          completedRequests++;
+
+          if (completedRequests === selectedIds.length) {
+            this.onActionComplete(successCount, selectedIds.length, 'moved');
+          }
+        },
+        error: (error) => {
+          console.error(`Failed to move email ${emailId}:`, error);
+          completedRequests++;
+
+          if (completedRequests === selectedIds.length) {
+            this.onActionComplete(successCount, selectedIds.length, 'moved');
+          }
+        }
+      });
     });
+  }
+  private onActionComplete(successCount: number, totalCount: number, action: string): void {
+    if (successCount > 0) {
+      this.loadEmails();
+      this.closeActionBar();
+      const message = action === 'moved'
+        ? `${successCount} of ${totalCount} email(s) moved to ${this.moveToFolder}`
+        : `${successCount} of ${totalCount} email(s) moved to trash`;
+      alert(message);
+    } else {
+      alert(`Failed to ${action} emails`);
+    }
+  }
+  getPriorityColor(priority: number): string {
+    switch(priority) {
+      case 1: return '#dc2626'; // Red - Urgent
+      case 2: return '#ea580c'; // Orange - High
+      case 3: return '#ca8a04'; // Yellow - Medium
+      case 4: return '#65a30d'; // Green - Low
+      default: return '#9ca3af'; // Gray - Default
+    }
   }
 }
