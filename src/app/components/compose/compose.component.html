@@ -1,12 +1,12 @@
 <!-- Modal Overlay -->
 <div class="compose-overlay" (click)="onClose()">
-  
+
   <!-- Modal Content -->
   <div class="compose-modal" (click)="$event.stopPropagation()">
-    
+
     <!-- Header -->
     <div class="compose-header">
-      <h2 class="compose-title">New Message</h2>
+      <h2 class="compose-title">{{ isReplyMode ? 'Reply' : isForwardMode ? 'Forward' : 'New Message' }}</h2>
       <button class="close-btn" (click)="onClose()" aria-label="Close" [disabled]="isLoading">
         ✕
       </button>
@@ -21,35 +21,26 @@
         {{ errorMessage }}
       </div>
     </div>
-    
+
     <!-- Form -->
     <div class="compose-body">
       <div class="form-group">
         <label for="to">To:</label>
-        <input 
-          type="text" 
-          id="to" 
-          [(ngModel)]="to"
-          placeholder="recipient@example.com (separate multiple emails with commas)"
-          class="form-input">
+        <input type="text" id="to" [(ngModel)]="to" [readonly]="isReplyMode" [class.readonly-input]="isReplyMode"
+          placeholder="recipient@example.com (separate multiple emails with commas)" class="form-input">
       </div>
-      
+
       <div class="form-group">
         <label for="subject">Subject:</label>
-        <input 
-          type="text" 
-          id="subject" 
-          [(ngModel)]="subject"
-          placeholder="Email subject"
-          class="form-input">
+        <input type="text" id="subject" [(ngModel)]="subject" [readonly]="isForwardMode"
+          [class.readonly-input]="isForwardMode" placeholder="Email subject" class="form-input">
       </div>
 
       <!-- Priority Dropdown -->
+      <!-- Priority Dropdown -->
       <div class="form-group">
         <label for="priority">Priority:</label>
-        <select 
-          id="priority" 
-          [(ngModel)]="priority"
+        <select id="priority" [(ngModel)]="priority" [disabled]="isForwardMode" [class.readonly-input]="isForwardMode"
           class="form-select">
           <option value="low">🟢 Low</option>
           <option value="normal" selected>🔵 Normal</option>
@@ -62,63 +53,45 @@
       <div class="form-group">
         <label>Attachments:</label>
         <div class="attachment-section">
-          <input 
-            type="file" 
-            id="file-input" 
-            (change)="onFileSelect($event)"
-            multiple
-            style="display: none;">
-          <button 
-            type="button"
-            class="btn-attach" 
-            (click)="fileInput.click()"
-            #fileInput
+          <input type="file" id="file-input" (change)="onFileSelect($event)" multiple style="display: none;">
+          <button type="button" class="btn-attach" [disabled]="isForwardMode" (click)="fileInput.click()" #fileInput
             onclick="document.getElementById('file-input').click()">
             📎 Add Attachments
           </button>
-          
+
           <!-- Show selected files -->
           <div class="attachments-list" *ngIf="attachments.length > 0">
             <div class="attachment-item" *ngFor="let file of attachments; let i = index">
               <span class="attachment-name">{{ file.name }}</span>
               <span class="attachment-size">({{ (file.size / 1024).toFixed(1) }} KB)</span>
-              <button 
-                type="button"
-                class="btn-remove" 
-                (click)="removeAttachment(i)"
-                aria-label="Remove attachment">
+              <button type="button" class="btn-remove" (click)="removeAttachment(i)" aria-label="Remove attachment">
                 ✕
               </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div class="form-group form-group-body">
         <label for="body">Message:</label>
-        <textarea 
-          id="body" 
-          [(ngModel)]="body"
-          placeholder="Write your message here..."
-          class="form-textarea"
-          rows="10"></textarea>
+        <textarea id="body" [(ngModel)]="body" [readonly]="isForwardMode" [class.readonly-input]="isForwardMode"
+          placeholder="Write your message here..." class="form-textarea" rows="10"></textarea>
       </div>
+
+      <!-- Footer -->
+      <div class="compose-footer">
+        <button class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button class="btn btn-draft" (click)="onSaveDraft()" [disabled]="isLoading">
+          <span *ngIf="!isLoading">Save as Draft</span>
+          <span *ngIf="isLoading">Saving...</span>
+        </button>
+        <button class="btn btn-send" (click)="onSend()" [disabled]="isLoading">
+          <span *ngIf="!isLoading">{{ isReplyMode ? 'Send Reply' : isForwardMode ? 'Forward' : 'Send' }}</span>
+          <span *ngIf="isLoading">Sending...</span>
+        </button>
+      </div>
+
     </div>
-    
-    <!-- Footer -->
-    <div class="compose-footer">
-      <button class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">
-        Cancel
-      </button>
-      <button class="btn btn-draft" (click)="onSaveDraft()" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Save as Draft</span>
-        <span *ngIf="isLoading">Saving...</span>
-      </button>
-      <button class="btn btn-send" (click)="onSend()" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Send</span>
-        <span *ngIf="isLoading">Sending...</span>
-      </button>
-    </div>
-    
   </div>
-</div>
