@@ -298,3 +298,36 @@
   color: #991b1b;
   border: 1px solid #fca5a5;
 }
+/* Read-only input styling */
+.readonly-input {
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  border-color: #e5e7eb !important;
+}
+/* Disabled select styling */
+.form-select:disabled {
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Disabled button styling */
+.btn-attach:disabled {
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  border-color: #e5e7eb !important;
+  opacity: 0.6;
+}
+
+.btn-attach:disabled:hover {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Read-only textarea styling */
+textarea.readonly-input {
+  resize: none !important;
+}
