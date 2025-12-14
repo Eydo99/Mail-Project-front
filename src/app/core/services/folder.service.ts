@@ -3,7 +3,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { forkJoin, map, Observable, switchMap } from 'rxjs';
 import { Email } from '../models/email.model';
-import { MailService } from './mail.service'; //
+import { MailService } from './mail.service';
+import {environment} from "../../../environments/environment1";
 
 export interface FolderData {
   id?: string;
@@ -23,8 +24,8 @@ export interface FolderRequest {
   providedIn: 'root'
 })
 export class FolderService {
-  private apiUrl = 'http://localhost:8080/api/folders';
-  private emailApiUrl = 'http://localhost:8080/api/emails';
+  private apiUrl = `${environment.apiUrl}/api/folders`;
+  private emailApiUrl = `${environment.apiUrl}/api/emails`;
 
   constructor(private http: HttpClient, private mailService: MailService) {}
 

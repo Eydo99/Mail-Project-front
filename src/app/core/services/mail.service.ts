@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Email } from '../models/email.model';
 import {Attachment} from "../models/attachment";
+import {environment} from "../../../environments/environment1";
 
 @Injectable({
   providedIn: 'root'
 })
 export class MailService {
-  private apiUrl = 'http://localhost:8080/api/mail';
+  private apiUrl = `${environment.apiUrl}/api/mail`;
 
   // Separate subjects for each folder
   private inboxEmailsSubject = new BehaviorSubject<Email[]>([]);
@@ -198,7 +199,7 @@ getInboxEmailsByPriority(): Observable<Email[]> {
       subject.next([...emails]);
 
       // Call backend
-      this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}).subscribe({
+      this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {},{withCredentials:true}).subscribe({
         error: (error) => {
           // Revert on error
           email.isStarred = !email.isStarred;
