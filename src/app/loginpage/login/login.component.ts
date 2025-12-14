@@ -39,15 +39,28 @@ export class LoginComponent {
     this.serverError = null;
     this.isLoading = true;
 
+    console.log('🔐 Attempting login...');
+
     this.authService.login(this.loginForm.value).subscribe({
       next: (res) => {
-        localStorage.setItem('currentUser', JSON.stringify(res));
+        console.log('✅ Login successful:', res);
+        
+        // Store user info in localStorage
+        localStorage.setItem('currentUser', JSON.stringify({
+          email: res.email || this.loginForm.value.email,
+          message: res.message
+        }));
+        
         this.isLoading = false;
+        
+        // Navigate to inbox
+        console.log('🚀 Navigating to inbox...');
         this.router.navigate(['/inbox']);
       },
-      error: () => {
+      error: (err) => {
+        console.error('❌ Login failed:', err);
         this.isLoading = false;
-        this.serverError = 'Invalid email or password.';
+        this.serverError = err.error?.message || 'Invalid email or password.';
       },
     });
   }

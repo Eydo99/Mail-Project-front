@@ -49,12 +49,16 @@ export class SidebarComponent implements OnInit {
   }
 
   navigate(route: string): void {
-    this.router.navigate([route]);
+    console.log('Navigating to:', route); // Debug log
+    this.router.navigate([route]).then(success => {
+      console.log('Navigation success:', success);
+    }).catch(err => {
+      console.error('Navigation error:', err);
+    });
   }
 
   openCompose(): void {
-  this.composeService.openCompose();
-  console.log('opening compose...');
-}
-
+    this.composeService.openCompose();
+    console.log('opening compose...');
+  }
 }

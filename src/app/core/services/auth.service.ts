@@ -18,6 +18,7 @@ export interface LoginPayload {
 
 export interface AuthResponse {
   message: string;
+  email?: string;
 }
 
 @Injectable({
@@ -36,6 +37,19 @@ export class AuthService {
 
   login(payload: LoginPayload): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload, {
+      withCredentials: true,
+    });
+  }
+
+  logout(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/logout`, {}, {
+      withCredentials: true,
+    });
+  }
+
+  validateSession(): Observable<AuthResponse> {
+    console.log('📡 AuthService: Calling /validate endpoint');
+    return this.http.get<AuthResponse>(`${this.baseUrl}/validate`, {
       withCredentials: true,
     });
   }
