@@ -14,132 +14,23 @@
   transition: width 0.35s cubic-bezier(.25, .8, .25, 1);
 }
 
-
 .sidebar *,
 .nav-btn,
 .label,
 .brand-text,
 .brand-avatar {
-  transition: opacity var(--transition), transform var(--transition), background var(--transition);
+  transition: opacity 0.3s ease, transform 0.3s ease, background 0.25s ease;
 }
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-
-  padding: 7px 6px;
-  margin: 0;
-  background: transparent;
-  border: none;
-
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.25s ease;
-}
-
 
 /* collapsed */
 .sidebar.closed {
   width: 80px;
 }
 
-/* ----------------------------------
-   NAVIGATION ICONS - FIXED
----------------------------------- */
-.nav-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  display: block;
-  margin: 0;
-  padding: 0;
-}
-
-/* For SVG icons (lucide-icon) */
-.nav-icon svg,
-lucide-icon svg {
-  width: 20px;
-  height: 20px;
-  stroke: white;
-  stroke-width: 2;
-  fill: none;
-}
-
-/* For image icons */
-.nav-icon img {
-  width: 20px;
-  height: 20px;
-  filter: brightness(0) invert(1); /* Makes icons white */
-}
-
-/* Ensure icons are visible in nav buttons */
-.nav-btn .nav-icon {
-  color: white;
-  stroke: white;
-}
-
-/* Active state icons */
-.nav-btn--active .nav-icon svg,
-.nav-btn--active lucide-icon svg {
-  stroke: #78a8dd;
-}
-
-/* Hover state icons */
-.nav-btn:hover .nav-icon svg,
-.nav-btn:hover lucide-icon svg {
-  stroke: #E3E3E3;
-}
-
-/* Utility button icons */
-.utility-btn .nav-icon svg,
-.utility-btn lucide-icon svg {
-  stroke: white;
-  stroke-width: 2;
-}
-
-/* Make sure lucide-icon component itself doesn't interfere */
-lucide-icon {
-  display: flex;
+.sidebar.closed .sidebar-inner {
+  padding: 18px 8px;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
 }
-
-/* For the new message button icon */
-.new-message-btn .nav-icon svg,
-.new-message-btn lucide-icon svg {
-  stroke: white;
-  stroke-width: 2.5;
-}
-
-.sidebar.closed .nav-btn {
-  padding: 8px;
-  justify-content: center;
-}
-
-
-
-
-
-
-
-
-.sidebar.closed .label {
-  display: none;
-}
-
-
-/* hide labels but DO NOT change width */
-.sidebar.closed .label,
-.sidebar.closed .brand-text,
-.sidebar.closed .folders-label {
-  opacity: 0;
-  transform: translateX(-10px);
-  pointer-events: none;
-}
-
 
 /* ----------------------------------
    WRAPPER
@@ -152,50 +43,213 @@ lucide-icon {
 }
 
 /* ----------------------------------
-   BRAND / HEADER
+   BRAND / HEADER - ENHANCED
 ---------------------------------- */
 .sidebar-header {
-  padding-bottom: 12px;
-  border-bottom: none;
-  margin-bottom: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+  width: 100%;
 }
-
-
 
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ENHANCED LOGO ICON */
+.brand-avatar {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.brand-avatar svg {
+  width: 24px;
+  height: 24px;
+  stroke: white;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+/* Collapsed state - center the icon */
+.sidebar.closed .brand {
+  justify-content: center;
 }
 
 .sidebar.closed .brand-avatar {
-  transform: scale(0.82);
-  opacity: 0.7;
+  transform: scale(1);
+  margin: 0;
 }
 
-.brand-avatar {
-  transition: transform var(--transition), opacity var(--transition);
+/* Hover effect on logo */
+.brand:hover .brand-avatar {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
 }
-
 
 .brand-text {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
-
 
 .sidebar.closed .brand-text {
   opacity: 0;
   transform: translateX(-12px);
   pointer-events: none;
+  width: 0;
 }
 
 .brand-title {
+  color: rgba(52, 197, 255, 0.927); /* The main text color */
+  
+  /* Text Stroke (using the box-shadow color for contrast) */
+  -webkit-text-stroke-width: 0.5px;
+  -webkit-text-stroke-color: #3B82F6;
+  text-stroke-width: 0.5px;
+  text-stroke-color: #3B82F6;
+
+  /* Initial subtle glow (using the text-shadow color) */
+  text-shadow: 0 0 5px #78a8dd;
+  
+  /* The box shadow property applies a shadow to the element's box, not the text itself. */
+  /* This creates an outer glow around the entire text block/container. */
+  box-shadow: 0 0 10px #3B82F6; 
+  
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  
+  /* Add a smooth transition for the hover effects */
+  transition: text-shadow 0.3s ease-in-out, box-shadow 0.3s ease-in-out; 
+}
+
+
+.brand-title:hover {
+  text-shadow:
+    0 0 10px #78a8dd, /* Brighter glow */
+    0 0 20px #78a8dd;
+    
+  box-shadow:
+    0 0 15px #3B82F6, 
+    0 0 30px #3B82F6;
+
+  -webkit-text-stroke-color: rgba(52, 197, 255, 0.927); 
+  text-stroke-color: rgba(52, 197, 255, 0.927);
+  cursor: pointer; 
+}
+
+
+/* ----------------------------------
+   PROFILE SECTION - NEW
+---------------------------------- */
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.profile-section:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+/* Collapsed state - center profile */
+.sidebar.closed .profile-section {
+  padding: 8px;
+  justify-content: center;
+  background: transparent;
+  margin-bottom: 16px;
+}
+
+.sidebar.closed .profile-section:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: none;
+}
+
+/* Profile Avatar */
+.profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-letter {
   color: white;
-  font-size: 30px;
-  font-weight: bold;
-  letter-spacing: 0.3px;
-  align-items:center;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Collapsed state - keep avatar size consistent */
+.sidebar.closed .profile-avatar {
+  width: 44px;
+  height: 44px;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+}
+
+.sidebar.closed .profile-letter {
+  font-size: 18px;
+}
+
+/* Profile section hover effect on avatar */
+.profile-section:hover .profile-avatar {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Profile Name */
+.profile-name {
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar.closed .profile-name {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
 }
 
 /* ----------------------------------
@@ -208,51 +262,135 @@ lucide-icon {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
+  gap: 6px;
+  width: 100%;
 }
 
 .nav-btn {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
+  gap: 12px;
   padding: 10px 12px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+  position: relative;
+  color: white;
+  width: 100%;
 }
 
-
+.sidebar.closed .nav-btn {
+  padding: 10px;
+  justify-content: center;
+  width: auto;
+}
 
 .nav-btn:hover {
   background: rgba(69, 104, 130, 0.3);
-  transition: background 0.25s ease-in-out;
-
+  transform: translateX(2px);
 }
 
+.sidebar.closed .nav-btn:hover {
+  transform: scale(1.05);
+}
 
 /* active item */
 .nav-btn--active {
   background: rgba(69, 104, 130, 0.4);
   border: 2px solid rgba(69, 104, 130, 0.5);
-  outline: none !important;
 }
 
+.nav-btn--active::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: #3B82F6;
+  border-radius: 0 4px 4px 0;
+}
 
-/* Delay icon animation slightly for a smoother effect */
+.sidebar.closed .nav-btn--active::before {
+  left: -4px;
+  width: 3px;
+}
 
-/* Text appears slightly after width expands */
+/* ----------------------------------
+   NAVIGATION ICONS - FIXED
+---------------------------------- */
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon svg,
+lucide-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: white;
+  stroke-width: 2;
+  fill: none;
+  transition: stroke 0.2s ease, transform 0.2s ease;
+}
+
+.nav-icon img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+}
+
+.nav-btn .nav-icon {
+  color: white;
+  stroke: white;
+}
+
+.nav-btn--active .nav-icon svg,
+.nav-btn--active lucide-icon svg {
+  stroke: #78a8dd;
+  transform: scale(1.1);
+}
+
+.nav-btn:hover .nav-icon svg,
+.nav-btn:hover lucide-icon svg {
+  stroke: #E3E3E3;
+  transform: scale(1.05);
+}
+
+lucide-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar.closed .label {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
+}
+
 .sidebar:not(.closed) .label,
-.sidebar:not(.closed) .brand-text {
+.sidebar:not(.closed) .brand-text,
+.sidebar:not(.closed) .profile-name {
   transition-delay: 0.1s;
 }
 
-
-
-
 .label {
-  font-size: 17px;
+  font-size: 15px;
   color: white;
   white-space: nowrap;
-  transition: opacity var(--transition), transform var(--transition);
 }
 
 /* ----------------------------------
@@ -262,9 +400,37 @@ lucide-icon {
   margin-top: 12px;
   margin-bottom: 4px;
   color: #E3E3E3;
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.sidebar.closed .folders-label {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+}
+
+/* Folder badge */
+.folder-badge {
+  margin-left: auto;
+  background: #8B4513;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  min-width: 24px;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.closed .folder-badge {
+  opacity: 0;
+  width: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 /* ----------------------------------
@@ -274,55 +440,84 @@ lucide-icon {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
 }
-
-
-
 
 .utility-btn {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
+  padding: 10px 12px;
   border: none;
   background: transparent;
   border-radius: 10px;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background 0.25s ease, transform 0.2s ease;
   color: white;
+  width: 100%;
 }
 
 .utility-btn:hover {
   background: rgba(69, 104, 130, 0.3);
+  transform: translateX(2px);
 }
 
-/* new email button */
+.sidebar.closed .utility-btn {
+  padding: 10px;
+  justify-content: center;
+  width: auto;
+}
+
+.sidebar.closed .utility-btn:hover {
+  transform: scale(1.05);
+}
+
+.sidebar.closed .utility-btn .label {
+  display: none;
+}
+
+/* Active state for utility buttons */
+.utility-btn.nav-btn--active {
+  background: rgba(69, 104, 130, 0.4);
+  border: 2px solid rgba(69, 104, 130, 0.5);
+}
+
+/* New message button */
 .new-message-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px;
-  background: #234C6A;
+  gap: 10px;
+  padding: 14px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   color: white;
   border-radius: 10px;
-  border: 2px solid #234C6A;
-  font-weight: bold;
-  font-size: 18px;
+  border: none;
+  font-weight: 600;
+  font-size: 15px;
   cursor: pointer;
-  transition: transform var(--transition), filter var(--transition);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  width: 100%;
 }
 
 .new-message-btn:hover {
   transform: translateY(-2px);
-  filter: brightness(1.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #4F94FF 0%, #3B82F6 100%);
 }
 
-/* Icon inside new message button */
+.new-message-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+}
+
 .new-message-btn .compose-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -330,68 +525,49 @@ lucide-icon {
 }
 
 .new-message-btn .compose-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   stroke: white;
   stroke-width: 2.5;
   fill: none;
 }
 
-/* Button text */
 .new-message-btn .btn-text {
   white-space: nowrap;
+  transition: opacity 0.3s ease;
 }
 
-/* collapsed new message */
+/* Collapsed new message button */
 .sidebar.closed .new-message-btn {
   padding: 12px;
   width: 48px;
   height: 48px;
   justify-content: center;
   gap: 0;
+  margin: 0 auto;
 }
 
 .sidebar.closed .new-message-btn .btn-text {
-  display: none;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .sidebar.closed .new-message-btn .compose-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .sidebar.closed .new-message-btn .compose-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
-
-/* Add these styles to your existing sidebar.component.css */
-
-/* Add to your existing sidebar.component.css */
-
-/* Folder badge for folder count */
-.folder-badge {
-  margin-left: auto;
-  background: #8B4513;
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
-  min-width: 24px;
-  text-align: center;
-}
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  position: relative;
-}
-
-/* Make sure labels and badges hide when sidebar is closed */
-.sidebar.closed .folder-badge {
-  display: none;
+/* Smooth width transition for collapsible elements */
+.sidebar.closed .label,
+.sidebar.closed .brand-text,
+.sidebar.closed .profile-name,
+.sidebar.closed .folder-badge,
+.sidebar.closed .new-message-btn .btn-text {
+  transition: opacity 0.25s ease, transform 0.25s ease, width 0.25s ease;
 }
