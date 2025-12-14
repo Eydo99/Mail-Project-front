@@ -4,6 +4,7 @@ import { EmailStateService } from '../core/services/email-state.service';
 import { Email } from '../core/models/email.model';
 import { Attachment } from "../core/models/attachment";
 import { MailService } from "../core/services/mail.service";
+import { ComposeService } from '../core/services/compose.service';
 
 @Component({
   selector: 'app-reader',
@@ -21,8 +22,9 @@ export class ReaderComponent implements OnInit {
   canGoPrevious: boolean = false;
 
   constructor(
-    private emailStateService: EmailStateService,
-    private mailService: MailService
+  private emailStateService: EmailStateService,
+  private mailService: MailService,
+  private composeService: ComposeService
   ) {}
 
   ngOnInit(): void {
@@ -63,15 +65,24 @@ export class ReaderComponent implements OnInit {
     this.emailStateService.navigateToPrevious();
   }
 
-  onReply(): void {
-    console.log('Reply to:', this.selectedEmail?.sender);
-    // TODO: Open compose modal
+onReply(): void {
+  if (this.selectedEmail) {
+    this.composeService.openReply(
+      this.selectedEmail.senderEmail,
+      this.selectedEmail.subject,
+      this.selectedEmail.body
+    );
   }
+}
 
   onForward(): void {
-    console.log('Forward:', this.selectedEmail?.subject);
-    // TODO: Open compose modal with forwarded content
+  if (this.selectedEmail) {
+    this.composeService.openForward(
+      this.selectedEmail.subject,
+      this.selectedEmail.body
+    );
   }
+}
 
   onViewAttachment(attachment: Attachment): void {
     this.mailService.viewAttachment(attachment);

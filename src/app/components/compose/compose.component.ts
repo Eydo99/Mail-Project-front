@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MailService } from '../../core/services/mail.service';
+import { ComposeService } from '../../core/services/compose.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-compose',
@@ -10,8 +12,12 @@ import { MailService } from '../../core/services/mail.service';
   templateUrl: './compose.component.html',
   styleUrl: './compose.component.css'
 })
-export class ComposeComponent {
+export class ComposeComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
+
+  isReplyMode: boolean = false;
+  isForwardMode: boolean = false;
+  private composeDataSubscription?: Subscription;
 
   to: string = '';
   subject: string = '';
@@ -23,10 +29,45 @@ export class ComposeComponent {
   errorMessage: string = '';
   successMessage: string = '';
 
-  constructor(private mailService: MailService) {}
+  constructor(private mailService: MailService,
+    private composeService: ComposeService
+
+  ) { }
+
+  ngOnInit(): void {
+  this.composeDataSubscription = this.composeService.composeData$.subscribe(data => {
+    this.isReplyMode = data.isReplyMode;
+    this.isForwardMode = data.isForwardMode;
+    
+    if (data.isReplyMode) {
+      this.to = data.replyToEmail;
+      this.subject = data.originalSubject.startsWith('Re:') 
+        ? data.originalSubject 
+        : `Re: ${data.originalSubject}`;
+      this.body = `\n\n--- Original Message ---\n${data.originalBody}`;
+    } else if (data.isForwardMode) {
+      this.to = '';
+      this.subject = data.originalSubject.startsWith('Fwd:') 
+        ? data.originalSubject 
+        : `Fwd: ${data.originalSubject}`;
+      this.body = `\n\n--- Forwarded Message ---\n${data.originalBody}`;
+    } else {
+      this.to = '';
+      this.subject = '';
+      this.body = '';
+      this.attachments = [];
+      this.priority = 'normal';
+    }
+  });
+}
 
   onClose(): void {
     this.close.emit();
+  }
+  ngOnDestroy(): void {
+    if (this.composeDataSubscription) {
+      this.composeDataSubscription.unsubscribe();
+    }
   }
 
   async onSend(): Promise<void> {  // Changed to async

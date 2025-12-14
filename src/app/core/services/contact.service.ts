@@ -5,6 +5,7 @@ import { Contact } from '../models/Contact';
 import { Email } from '../models/EmailContacts';
 import { Phone } from '../models/phoneContacts';
 import { PaginatedContactResponse } from '../models/PaginatedContactResponse';
+import {environment} from "../../../environments/environment1";
 
 export interface ContactRequest {
   name: string;
@@ -16,7 +17,7 @@ export interface ContactRequest {
   providedIn: 'root'
 })
 export class ContactService {
-  private apiUrl = 'http://localhost:8080/api/contacts';
+  private apiUrl = `${environment.apiUrl}/api/contacts`;
 
   constructor(private http: HttpClient) {}
 

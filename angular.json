@@ -25,10 +25,9 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.css" ,
+              "src/styles.css",
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
-                "src/assets/animations.css"
-
+              "src/assets/animations.css"
             ],
             "scripts": []
           },
@@ -51,7 +50,24 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment1.ts",
+                  "with": "src/environments/environment1.ts"
+                }
+              ]
+            },
+            "dev2": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment1.ts",
+                  "with": "src/environments/environment2.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -64,6 +80,10 @@
             },
             "development": {
               "buildTarget": "Mail:build:development"
+            },
+            "dev2": {
+              "buildTarget": "Mail:build:dev2",
+              "port": 4201
             }
           },
           "defaultConfiguration": "development"
