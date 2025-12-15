@@ -302,25 +302,34 @@ export class FolderViewComponent implements OnInit {
   deleteSelectedEmails(): void {
     if (this.selectedEmails.size === 0) return;
 
-    const confirmed = confirm(`Move ${this.selectedEmails.size} email(s) to trash?`);
-    if (!confirmed) return;
+    const confirmDelete = confirm(`Move ${this.selectedEmails.size} email(s) to trash?`);
+    if (!confirmDelete) return;
 
     const selectedIds = Array.from(this.selectedEmails);
+    let completedRequests = 0;
+    let successCount = 0;
 
-    // Use FolderService for bulk delete
-    this.folderService.bulkDeleteFromFolder(selectedIds, this.folderId).subscribe({
-      next: () => {
-        alert(`${selectedIds.length} email(s) moved to trash`);
-        this.loadEmails(); // Reload emails from backend
-        this.closeActionBar();
-      },
-      error: (error) => {
-        console.error('Error deleting emails:', error);
-        alert('Failed to delete emails');
-      }
+    selectedIds.forEach(emailId => {
+      this.mailService.deleteEmail(emailId, this.folderName).subscribe({
+        next: () => {
+          successCount++;
+          completedRequests++;
+
+          if (completedRequests === selectedIds.length) {
+            this.onActionComplete(successCount, selectedIds.length, 'deleted');
+          }
+        },
+        error: (error) => {
+          console.error(`Failed to delete email ${emailId}:`, error);
+          completedRequests++;
+
+          if (completedRequests === selectedIds.length) {
+            this.onActionComplete(successCount, selectedIds.length, 'deleted');
+          }
+        }
+      });
     });
   }
-
   moveSelectedEmails(): void {
     if (this.selectedEmails.size === 0 || !this.moveToFolder) {
       alert('Please select a folder');
