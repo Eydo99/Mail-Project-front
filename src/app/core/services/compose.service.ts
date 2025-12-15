@@ -4,9 +4,13 @@ import { BehaviorSubject } from 'rxjs';
 export interface ComposeData {
   isReplyMode: boolean;
   isForwardMode: boolean;
+  isDraftMode: boolean;
+  draftId?: string;
   replyToEmail: string;
   originalSubject: string;
   originalBody: string;
+  originalPriority?: string;
+  originalAttachments?: any[];
 }
 
 @Injectable({
@@ -19,6 +23,7 @@ export class ComposeService {
 private composeDataSubject = new BehaviorSubject<ComposeData>({
   isReplyMode: false,
   isForwardMode: false,
+  isDraftMode: false,
   replyToEmail: '',
   originalSubject: '',
   originalBody: ''
@@ -29,30 +34,49 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
   this.composeDataSubject.next({
     isReplyMode: false,
     isForwardMode: false,
+    isDraftMode: false,
     replyToEmail: '',
     originalSubject: '',
     originalBody: ''
   });
   this.composeOpenSubject.next(true);
 }
+ 
 
   openReply(senderEmail: string, subject: string, body: string): void {
-    this.composeDataSubject.next({
-      isReplyMode: true,
-      isForwardMode:false,
-      replyToEmail: senderEmail,
-      originalSubject: subject,
-      originalBody: body
-    });
-    this.composeOpenSubject.next(true);
-  }
+  this.composeDataSubject.next({
+    isReplyMode: true,
+    isForwardMode: false,
+    isDraftMode: false,
+    replyToEmail: senderEmail,
+    originalSubject: subject,
+    originalBody: body
+  });
+  this.composeOpenSubject.next(true);
+}
+
   openForward(subject: string, body: string): void {
   this.composeDataSubject.next({
     isReplyMode: false,
     isForwardMode: true,
+    isDraftMode: false,
     replyToEmail: '',
     originalSubject: subject,
     originalBody: body
+  });
+  this.composeOpenSubject.next(true);
+}
+openDraft(draftId: string, subject: string, body: string, priority: string, attachments?: any[]): void {
+  this.composeDataSubject.next({
+    isReplyMode: false,
+    isForwardMode: false,
+    isDraftMode: true,
+    draftId: draftId,
+    replyToEmail: '',
+    originalSubject: subject,
+    originalBody: body,
+    originalPriority: priority,
+    originalAttachments: attachments
   });
   this.composeOpenSubject.next(true);
 }
