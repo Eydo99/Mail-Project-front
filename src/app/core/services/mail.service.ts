@@ -227,9 +227,9 @@ getInboxEmailsByPriority(): Observable<Email[]> {
   /**
   * Compose/send a new email
   */
-composeMail(email: any): Observable<string> {
-  return this.http.post(`${this.apiUrl}/compose`, email, {
-    responseType: 'text',
+composeMail(email: any): Observable<any> {  // Changed from Observable<string> to Observable<any>
+  return this.http.post<any>(`${this.apiUrl}/compose`, email, {
+    // REMOVED responseType: 'text' - this allows Angular to parse JSON automatically
     withCredentials: true
   });
 }
@@ -351,4 +351,26 @@ moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<str
         return this.inboxEmailsSubject;
     }
   }
+
+
+  getStarredEmails(): Observable<Email[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/starred`, {
+    withCredentials: true
+  }).pipe(
+    map(emails => this.mapBackendToFrontend(emails))
+  );
+}
+
+
+private starredEmailsSubject = new BehaviorSubject<Email[]>([]);
+public starredEmails$ = this.starredEmailsSubject.asObservable();
+
+refreshStarredEmails(): Observable<Email[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/starred`, {
+    withCredentials: true
+  }).pipe(
+    map(emails => this.mapBackendToFrontend(emails)),
+    tap(emails => this.starredEmailsSubject.next(emails))
+  );
+}
 }
