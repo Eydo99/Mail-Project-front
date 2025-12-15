@@ -41,16 +41,16 @@ export class ComposeComponent implements OnInit, OnDestroy {
     
     if (data.isReplyMode) {
       this.to = data.replyToEmail;
-      this.subject = data.originalSubject.startsWith('Re:') 
+      this.subject = data.originalSubject 
         ? data.originalSubject 
         : `Re: ${data.originalSubject}`;
-      this.body = `\n\n--- Original Message ---\n${data.originalBody}`;
+      this.body = `${data.originalBody}`;
     } else if (data.isForwardMode) {
       this.to = '';
-      this.subject = data.originalSubject.startsWith('Fwd:') 
+      this.subject = data.originalSubject 
         ? data.originalSubject 
         : `Fwd: ${data.originalSubject}`;
-      this.body = `\n\n--- Forwarded Message ---\n${data.originalBody}`;
+      this.body = `${data.originalBody}`;
     } else {
       this.to = '';
       this.subject = '';
