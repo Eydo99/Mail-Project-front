@@ -70,54 +70,77 @@ export class ComposeComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onSend(): Promise<void> {  // Changed to async
-    if (!this.validateForm()) {
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    // Convert priority string to number matching your DTO
-    const priorityMap: { [key: string]: number } = {
-      'low': 4,
-      'normal': 3,
-      'high': 2,
-      'urgent': 1
-    };
-
-    // Split recipients by comma and trim whitespace
-    const recipients = this.to.split(',').map(email => email.trim()).filter(email => email);
-
-    // Convert attachments to DTO format
-    const attachmentDTOs = await this.convertAttachments();
-
-    // Match your mailContentDTO structure
-    const mailContent = {
-      body: this.body,
-      subject: this.subject,
-      recipients: recipients,
-      attachements: attachmentDTOs, // Now includes actual attachment data
-      piriority: priorityMap[this.priority]
-    };
-
-    console.log('Sending mail with attachments:', mailContent); // Debug log
-
-    this.mailService.composeMail(mailContent).subscribe({
-      next: (response) => {
-        console.log('Email sent successfully:', response);
-        this.successMessage = 'Email sent successfully!';
-        this.isLoading = false;
-        setTimeout(() => this.close.emit(), 1500);
-      },
-      error: (error) => {
-        console.error('Error sending email:', error);
-        this.errorMessage = 'Failed to send email. Please try again.';
-        this.isLoading = false;
-      }
-    });
+  async onSend(): Promise<void> {
+  if (!this.validateForm()) {
+    return;
   }
+
+  this.isLoading = true;
+  this.errorMessage = '';
+  this.successMessage = '';
+
+  // Convert priority string to number matching your DTO
+  const priorityMap: { [key: string]: number } = {
+    'low': 4,
+    'normal': 3,
+    'high': 2,
+    'urgent': 1
+  };
+
+  // Split recipients by comma and trim whitespace
+  const recipients = this.to.split(',').map(email => email.trim()).filter(email => email);
+
+  // Convert attachments to DTO format
+  const attachmentDTOs = await this.convertAttachments();
+
+  // Match your mailContentDTO structure
+  const mailContent = {
+    body: this.body,
+    subject: this.subject,
+    recipients: recipients,
+    attachements: attachmentDTOs,
+    piriority: priorityMap[this.priority]
+  };
+
+  console.log('Sending mail with attachments:', mailContent);
+
+  this.mailService.composeMail(mailContent).subscribe({
+    next: (response: any) => {
+      console.log('Email response:', response);
+      this.isLoading = false;
+
+      if (response.status === 'success') {
+        // All emails sent successfully
+        this.successMessage = `✅ Email sent successfully to all ${response.totalSent} recipient(s)!`;
+        setTimeout(() => this.close.emit(), 2000);
+      } else if (response.status === 'partial') {
+        // Some succeeded, some failed
+        const successList = response.successful.join(', ');
+        const failedList = response.failed.join(', ');
+        
+        this.successMessage = `✅ Email sent successfully to: ${successList}`;
+        this.errorMessage = `❌ Failed to send to: ${failedList} (not registered in the system)`;
+        
+        // Don't auto-close on partial success so user can see both messages
+      } else if (response.status === 'failed') {
+        // All failed
+        const failedList = response.failed.join(', ');
+        this.errorMessage = `❌ Failed to send email to: ${failedList}. These email addresses are not registered in our system.`;
+      }
+    },
+    error: (error) => {
+      console.error('Error sending email:', error);
+      this.isLoading = false;
+      
+      // Handle error response
+      if (error.error && error.error.message) {
+        this.errorMessage = `❌ ${error.error.message}`;
+      } else {
+        this.errorMessage = '❌ Failed to send email. Please try again.';
+      }
+    }
+  });
+}
 
   async onSaveDraft(): Promise<void> {  // Changed to async
     this.isLoading = true;
