@@ -28,7 +28,7 @@
 }
 
 .sidebar.closed .sidebar-inner {
-  padding: 18px 8px;
+  padding: 18px 0;
   align-items: center;
 }
 
@@ -277,7 +277,6 @@
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.25s ease, transform 0.2s ease;
-  position: relative;
   color: white;
   width: 100%;
 }
@@ -285,7 +284,8 @@
 .sidebar.closed .nav-btn {
   padding: 10px;
   justify-content: center;
-  width: auto;
+  width: 56px;
+  margin: 0 auto;
 }
 
 .nav-btn:hover {
@@ -393,14 +393,209 @@ lucide-icon {
   white-space: nowrap;
 }
 
+.dispatcher-section {
+  margin: 10px 0;
+}
+
+.dispatcher-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 15px;
+}
+
+.dispatcher-toggle {
+  padding: 12px 20px;
+  margin: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dispatcher-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Enabled state - Green glow */
+.dispatcher-toggle.enabled {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.dispatcher-toggle.enabled:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.sidebar.collapsed .dispatcher-toggle,
+.sidebar.is-collapsed .dispatcher-toggle,
+.sidebar-collapsed .dispatcher-toggle,
+.sidebar.closed .dispatcher-toggle {
+  justify-content: center;
+  padding: 12px;
+  margin: 5px auto;
+  width: 56px;
+  min-width: 56px;
+}
+
+/* Hide content when collapsed, keep icon centered */
+.sidebar.collapsed .dispatcher-content,
+.sidebar.is-collapsed .dispatcher-content,
+.sidebar-collapsed .dispatcher-content,
+.sidebar.closed .dispatcher-content {
+  display: none;
+}
+
+.sidebar.collapsed .dispatcher-hint,
+.sidebar.is-collapsed .dispatcher-hint,
+.sidebar-collapsed .dispatcher-hint,
+.sidebar.closed .dispatcher-hint {
+  display: none;
+}
+.dispatcher-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.dispatcher-toggle:hover .dispatcher-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+/* Pulsing animation when enabled */
+.dispatcher-toggle.enabled .dispatcher-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+
+.dispatcher-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.dispatcher-label {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: 1;
+  color: #e1e8ed;
+}
+
+.dispatcher-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  animation: badge-glow 2s ease-in-out infinite;
+}
+
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+}
+
+.dispatcher-status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.dispatcher-status.active {
+  background: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+
+
+.pulse-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Collapsed state - adjust pulse dot position */
+.sidebar.closed .pulse-dot {
+  top: 4px;
+  right: 4px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+}
+
+
+.dispatcher-hint {
+  padding: 8px 20px;
+  margin: 0 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  line-height: 1.4;
+  transition: opacity 0.2s ease;
+}
+
+
+
+.dispatcher-toggle:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+
 /* ----------------------------------
    FOLDERS
 ---------------------------------- */
+.folders-section {
+  margin-top: 16px;
+}
+
 .folders-label {
   margin-top: 12px;
-  margin-bottom: 4px;
-  color: #E3E3E3;
-  font-size: 13px;
+  margin-bottom: 8px;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   font-weight: 600;
@@ -424,6 +619,8 @@ lucide-icon {
   min-width: 24px;
   text-align: center;
   transition: opacity 0.3s ease;
+  position: absolute;
+  right: 8px;
 }
 
 .sidebar.closed .folder-badge {
@@ -431,6 +628,11 @@ lucide-icon {
   width: 0;
   padding: 0;
   overflow: hidden;
+}
+
+/* Make nav-btn position relative for badge positioning */
+.nav-btn {
+  position: relative;
 }
 
 /* ----------------------------------
@@ -468,7 +670,8 @@ lucide-icon {
 .sidebar.closed .utility-btn {
   padding: 10px;
   justify-content: center;
-  width: auto;
+  width: 56px;
+  margin: 0 auto;
 }
 
 .sidebar.closed .utility-btn:hover {
@@ -570,4 +773,15 @@ lucide-icon {
 .sidebar.closed .folder-badge,
 .sidebar.closed .new-message-btn .btn-text {
   transition: opacity 0.25s ease, transform 0.25s ease, width 0.25s ease;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .dispatcher-toggle,
+  .dispatcher-icon,
+  .dispatcher-badge,
+  .pulse-dot {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }

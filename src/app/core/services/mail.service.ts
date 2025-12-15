@@ -351,4 +351,26 @@ moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<str
         return this.inboxEmailsSubject;
     }
   }
+
+
+  getStarredEmails(): Observable<Email[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/starred`, {
+    withCredentials: true
+  }).pipe(
+    map(emails => this.mapBackendToFrontend(emails))
+  );
+}
+
+
+private starredEmailsSubject = new BehaviorSubject<Email[]>([]);
+public starredEmails$ = this.starredEmailsSubject.asObservable();
+
+refreshStarredEmails(): Observable<Email[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/starred`, {
+    withCredentials: true
+  }).pipe(
+    map(emails => this.mapBackendToFrontend(emails)),
+    tap(emails => this.starredEmailsSubject.next(emails))
+  );
+}
 }
