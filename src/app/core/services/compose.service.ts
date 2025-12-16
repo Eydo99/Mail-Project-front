@@ -5,6 +5,7 @@ export interface ComposeData {
   isReplyMode: boolean;
   isForwardMode: boolean;
   isDraftMode: boolean;
+  isEditDraftMode: boolean;
   draftId?: string;
   replyToEmail: string;
   originalSubject: string;
@@ -24,6 +25,7 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
   isReplyMode: false,
   isForwardMode: false,
   isDraftMode: false,
+  isEditDraftMode: false,
   replyToEmail: '',
   originalSubject: '',
   originalBody: ''
@@ -35,6 +37,7 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
     isReplyMode: false,
     isForwardMode: false,
     isDraftMode: false,
+    isEditDraftMode: false,
     replyToEmail: '',
     originalSubject: '',
     originalBody: ''
@@ -48,6 +51,7 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
     isReplyMode: true,
     isForwardMode: false,
     isDraftMode: false,
+    isEditDraftMode: false,
     replyToEmail: senderEmail,
     originalSubject: subject,
     originalBody: body
@@ -60,6 +64,7 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
     isReplyMode: false,
     isForwardMode: true,
     isDraftMode: false,
+    isEditDraftMode: false,
     replyToEmail: '',
     originalSubject: subject,
     originalBody: body
@@ -71,6 +76,22 @@ openDraft(draftId: string, subject: string, body: string, priority: string, atta
     isReplyMode: false,
     isForwardMode: false,
     isDraftMode: true,
+    isEditDraftMode: false,
+    draftId: draftId,
+    replyToEmail: '',
+    originalSubject: subject,
+    originalBody: body,
+    originalPriority: priority,
+    originalAttachments: attachments
+  });
+  this.composeOpenSubject.next(true);
+}
+openEditDraft(draftId: string, subject: string, body: string, priority: string, attachments?: any[]): void {
+  this.composeDataSubject.next({
+    isReplyMode: false,
+    isForwardMode: false,
+    isDraftMode: false,
+    isEditDraftMode: true,
     draftId: draftId,
     replyToEmail: '',
     originalSubject: subject,

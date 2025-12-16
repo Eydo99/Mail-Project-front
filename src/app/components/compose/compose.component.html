@@ -7,7 +7,10 @@
     <!-- Header -->
     <div class="compose-header">
       <h2 class="compose-title">
-        {{ isDraftMode ? 'Send Draft' : isReplyMode ? 'Reply' : isForwardMode ? 'Forward' : 'New Message' }}
+        <h2 class="compose-title">
+          {{ isEditDraftMode ? 'Edit Draft' : isDraftMode ? 'Send Draft' : isReplyMode ? 'Reply' : isForwardMode ?
+          'Forward' : 'New Message' }}
+        </h2>
       </h2>
       <button class="close-btn" (click)="onClose()" aria-label="Close" [disabled]="isLoading">
         ✕
@@ -86,14 +89,14 @@
         <button class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">
           Cancel
         </button>
-        <button class="btn btn-draft" (click)="onSaveDraft()" [disabled]="isLoading || isDraftMode"
-          *ngIf="!isDraftMode">
-          <span *ngIf="!isLoading">Save as Draft</span>
+        <button class="btn btn-draft" (click)="onSaveDraft()" [disabled]="isLoading" *ngIf="!isDraftMode">
+          <span *ngIf="!isLoading">{{ isEditDraftMode ? 'Update Draft' : 'Save as Draft' }}</span>
           <span *ngIf="isLoading">Saving...</span>
         </button>
         <button class="btn btn-send" (click)="onSend()" [disabled]="isLoading">
           <span *ngIf="!isLoading">
-            {{ isDraftMode ? 'Send Email' : isReplyMode ? 'Send Reply' : isForwardMode ? 'Forward' : 'Send' }}
+            {{ isEditDraftMode ? 'Send Email' : isDraftMode ? 'Send Email' : isReplyMode ? 'Send Reply' : isForwardMode
+            ? 'Forward' : 'Send' }}
           </span>
           <span *ngIf="isLoading">Sending...</span>
         </button>

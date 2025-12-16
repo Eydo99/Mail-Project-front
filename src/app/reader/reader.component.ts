@@ -114,6 +114,28 @@ onSendDraft(): void {
     );
   }
 }
+onEditDraft(): void {
+  if (this.selectedEmail) {
+    const priorityMap: { [key: number]: string } = {
+      1: 'urgent',
+      2: 'high',
+      3: 'normal',
+      4: 'low'
+    };
+    
+    const priorityString = this.selectedEmail.priority 
+      ? priorityMap[this.selectedEmail.priority] || 'normal'
+      : 'normal';
+
+    this.composeService.openEditDraft(
+      this.selectedEmail.id,
+      this.selectedEmail.subject,
+      this.selectedEmail.body,
+      priorityString,
+      this.selectedEmail.attachments
+    );
+  }
+}
 
   onViewAttachment(attachment: Attachment): void {
     this.mailService.viewAttachment(attachment);

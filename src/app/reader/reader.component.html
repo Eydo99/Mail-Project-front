@@ -71,6 +71,9 @@
     <!-- Footer Actions -->
     <div class="reader-footer">
       <ng-container *ngIf="isDraft; else normalActions">
+        <button class="forward-btn" (click)="onEditDraft()">
+          ✏️ Edit Draft
+        </button>
         <button class="reply-btn send-draft-btn" (click)="onSendDraft()">
           📤 Send Email
         </button>
