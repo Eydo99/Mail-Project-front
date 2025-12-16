@@ -13,6 +13,8 @@ import { SentListComponent } from "./inbox/sent-list/sent-list.component";
 import { DraftListComponent } from "./inbox/draft-list/draft-list.component";
 import { SettingsComponent } from "./components/settings/settings.component"
 import {NotFoundComponent} from "./components/not-found/not-found.component";
+import { StarredListComponent } from "./inbox/starred-list/starred-list.component"; // ADD THIS LINE
+
 
 export const routes: Routes = [
   // Default route goes to login page
@@ -33,6 +35,7 @@ export const routes: Routes = [
       { path: 'sent', component: SentListComponent },
       { path: 'drafts', component: DraftListComponent },
       { path: 'trash', component: TrashListComponent },
+      { path: 'starred', component: StarredListComponent },
       { path: 'contacts', component: ContactsComponent },
       { path: 'folders', component: FoldersPageComponent },
       { path: 'folder/:id', component: FolderViewComponent },
