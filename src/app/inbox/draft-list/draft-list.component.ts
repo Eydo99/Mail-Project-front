@@ -3,7 +3,6 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import { CommonModule } from '@angular/common';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
-import { EmailFilterService } from '../../core/services/email-filter.service';
 import { Email } from '../../core/models/email.model';
 import { SortCriteria } from '../../core/models/SortCriteria';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
@@ -67,7 +66,6 @@ export class DraftListComponent implements OnInit{
   constructor(
     private mailService: MailService,
     private emailStateService: EmailStateService,
-    private emailFilterService: EmailFilterService,
     private folderService: FolderService //
   ) {}
 
@@ -91,10 +89,66 @@ export class DraftListComponent implements OnInit{
    * Load emails for this folder
    */
   loadEmails(): void {
-    this.mailService.refreshFolder(this.folderName).subscribe(emails => {
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+
+    // Build filter object for backend
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.refreshFolder(this.folderName, sortString, backendFilters).subscribe(emails => {
+      // Backend already filtered and sorted - just use the results
       this.allEmails = emails;
-      this.applyFiltersAndSort();
+      this.filteredEmails = emails;
+      this.totalItems = emails.length;
+      this.updatePagination();
     });
+  }
+
+  /**
+   * Convert frontend FilterCriteria to backend format
+   */
+  private buildBackendFilters(): any {
+    const filters: any = {};
+
+    if (this.searchQuery && this.searchQuery.trim()) {
+      filters.searchTerm = this.searchQuery.trim();
+    }
+
+    if (this.filterCriteria.dateFrom) {
+      filters.dateFrom = this.filterCriteria.dateFrom;
+    }
+
+    if (this.filterCriteria.dateTo) {
+      filters.dateTo = this.filterCriteria.dateTo;
+    }
+
+    if (this.filterCriteria.sender) {
+      filters.sender = this.filterCriteria.sender;
+    }
+
+    if (this.filterCriteria.priority && this.filterCriteria.priority.length > 0) {
+      filters.priority = this.filterCriteria.priority;
+    }
+
+    if (this.filterCriteria.hasAttachment !== undefined) {
+      filters.hasAttachment = this.filterCriteria.hasAttachment;
+    }
+
+    if (this.filterCriteria.isStarred !== undefined) {
+      filters.isStarred = this.filterCriteria.isStarred;
+    }
+
+    if (this.filterCriteria.subjectContains) {
+      filters.subjectContains = this.filterCriteria.subjectContains;
+    }
+
+    if (this.filterCriteria.bodyContains) {
+      filters.bodyContains = this.filterCriteria.bodyContains;
+    }
+
+    // Check if any filters are active
+    this.hasActiveFilters = Object.keys(filters).length > 0;
+
+    return Object.keys(filters).length > 0 ? filters : undefined;
   }
 
   onEmailClick(email: Email): void {
@@ -107,30 +161,6 @@ export class DraftListComponent implements OnInit{
     this.mailService.toggleStar(email.id, this.folderName);
   }
 
- /**
-   * Apply filters and sorting
-   */
-  applyFiltersAndSort(): void {
-    // Apply search as part of filter criteria
-    const criteria: FilterCriteria = {
-      ...this.filterCriteria,
-      searchTerm: this.searchQuery
-    };
-
-    // Process emails through filter service
-    this.filteredEmails = this.emailFilterService.processEmails(
-      this.allEmails,
-      criteria,
-      this.sortCriteria
-    );
-
-    // Check if filters are active
-    this.hasActiveFilters = this.emailFilterService.hasActiveFilters(criteria);
-
-    // Update pagination
-    this.totalItems = this.filteredEmails.length;
-    this.updatePagination();
-  }
 
   /**
    * Handle search input
@@ -138,7 +168,7 @@ export class DraftListComponent implements OnInit{
   onSearch(query: string): void {
     this.searchQuery = query;
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails();
   }
 
   /**
@@ -147,7 +177,7 @@ export class DraftListComponent implements OnInit{
   onSortChange(value: string): void {
     const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
     this.sortCriteria = { field, direction };
-    this.applyFiltersAndSort();
+    this.loadEmails();
   }
 
   /**
@@ -170,7 +200,7 @@ export class DraftListComponent implements OnInit{
   onApplyFilters(criteria: FilterCriteria): void {
     this.filterCriteria = criteria;
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails();
   }
 
   /**
@@ -180,7 +210,7 @@ export class DraftListComponent implements OnInit{
     this.filterCriteria = {};
     this.searchQuery = '';
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails();
   }
 
   // ============== PAGINATION ==============

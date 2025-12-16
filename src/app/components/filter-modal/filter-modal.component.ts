@@ -1,6 +1,6 @@
 // components/filter-modal/filter-modal.component.ts
 
-import { Component, EventEmitter, Output, Input } from '@angular/core';
+import { Component, EventEmitter, Output, Input,OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
@@ -13,7 +13,7 @@ import { LucideAngularModule, X, Calendar, User, AlertCircle, Paperclip, Star, F
   templateUrl: './filter-modal.component.html',
   styleUrls: ['./filter-modal.component.css']
 })
-export class FilterModalComponent {
+export class FilterModalComponent implements OnInit{
   // Icons
   readonly X = X;
   readonly Calendar = Calendar;

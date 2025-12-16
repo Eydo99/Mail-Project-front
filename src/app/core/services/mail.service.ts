@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Email } from '../models/email.model';
-import {Attachment} from "../models/attachment";
-import {environment} from "../../../environments/environment1";
+import { Attachment } from "../models/attachment";
+import { environment } from "../../../environments/environment1";
+import {FilterCriteria} from "../../core/models/FilterCriteria"
 
 @Injectable({
   providedIn: 'root'
@@ -16,12 +17,14 @@ export class MailService {
   private sentEmailsSubject = new BehaviorSubject<Email[]>([]);
   private draftEmailsSubject = new BehaviorSubject<Email[]>([]);
   private trashEmailsSubject = new BehaviorSubject<Email[]>([]);
+  private starredEmailsSubject = new BehaviorSubject<Email[]>([]);
 
   // Public observables
   public inboxEmails$ = this.inboxEmailsSubject.asObservable();
   public sentEmails$ = this.sentEmailsSubject.asObservable();
   public draftEmails$ = this.draftEmailsSubject.asObservable();
   public trashEmails$ = this.trashEmailsSubject.asObservable();
+  public starredEmails$ = this.starredEmailsSubject.asObservable();
 
   // Keep for backward compatibility
   public emails$ = this.inboxEmails$;
@@ -45,7 +48,7 @@ export class MailService {
       isStarred: email.starred,
       hasAttachment: email.hasAttachment,
       priority: email.priority,
-      attachments: email.attachments || []  // ADD THIS LINE
+      attachments: email.attachments || []
     }));
   }
 
@@ -55,13 +58,11 @@ export class MailService {
   private extractSenderName(from: string[] | string): string {
     if (!from) return 'Unknown';
 
-    // Handle if 'from' is a string
     if (typeof from === 'string') {
       const name = from.split('@')[0];
       return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
-    // Handle if 'from' is an array
     if (Array.isArray(from) && from.length > 0) {
       const email = from[0];
       const name = email.split('@')[0];
@@ -72,16 +73,17 @@ export class MailService {
   }
 
   /**
-   * Load inbox emails from backend
+   * Load inbox emails from backend (initial load)
    */
-private loadInboxEmails(): void {
-  this.http.get<any[]>(`${this.apiUrl}/inbox`, {
-    withCredentials: true
-  }).subscribe({
-    next: emails => this.inboxEmailsSubject.next(this.mapBackendToFrontend(emails)),
-    error: err => console.error('Error loading inbox emails:', err),
-  });
-}
+  private loadInboxEmails(): void {
+    this.http.post<any[]>(`${this.apiUrl}/inbox`, {}, {
+      params: { sort: 'date-desc' },
+      withCredentials: true
+    }).subscribe({
+      next: emails => this.inboxEmailsSubject.next(this.mapBackendToFrontend(emails)),
+      error: err => console.error('Error loading inbox emails:', err),
+    });
+  }
 
   /**
    * Get emails for a specific folder (returns observable)
@@ -96,76 +98,122 @@ private loadInboxEmails(): void {
         return this.draftEmails$;
       case 'trash':
         return this.trashEmails$;
+      case 'starred':
+        return this.starredEmails$;
       default:
         return this.inboxEmails$;
     }
   }
 
   /**
-   * Refresh emails for a specific folder
+   * Refresh folder with filtering and sorting (NEW - uses backend)
    */
-  refreshFolder(folder: string): Observable<Email[]> {
-  return this.http.get<any[]>(`${this.apiUrl}/${folder}`, {
-    withCredentials: true
-  }).pipe(
-    map(emails => this.mapBackendToFrontend(emails)),
-    tap(emails => {
-      switch (folder) {
-        case 'inbox':
-          this.inboxEmailsSubject.next(emails);
-          break;
-        case 'sent':
-          this.sentEmailsSubject.next(emails);
-          break;
-        case 'draft':
-          this.draftEmailsSubject.next(emails);
-          break;
-        case 'trash':
-          this.trashEmailsSubject.next(emails);
-          break;
-      }
-    })
-  );
-}
+  refreshFolder(folder: string, sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/${folder}`, filters || {}, {
+      params: { sort },
+      withCredentials: true
+    }).pipe(
+      map(emails => this.mapBackendToFrontend(emails)),
+      tap(emails => {
+        switch (folder) {
+          case 'inbox':
+            this.inboxEmailsSubject.next(emails);
+            break;
+          case 'sent':
+            this.sentEmailsSubject.next(emails);
+            break;
+          case 'draft':
+            this.draftEmailsSubject.next(emails);
+            break;
+          case 'trash':
+            this.trashEmailsSubject.next(emails);
+            break;
+          case 'starred':
+            this.starredEmailsSubject.next(emails);
+            break;
+        }
+      })
+    );
+  }
+
+
 
   /**
-   * Get inbox emails with mapping
+   * Get inbox emails with filters and sorting
    */
-  getInboxEmails(): Observable<Email[]> {
-    return this.refreshFolder('inbox');
+  getInboxEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.refreshFolder('inbox', sort, filters);
   }
+
+
 
   /**
    * Get inbox emails sorted by priority (using backend Priority Queue)
    */
-getInboxEmailsByPriority(): Observable<Email[]> {
-  return this.http.get<any[]>(`${this.apiUrl}/inbox/priority`, {
-    withCredentials: true
-  }).pipe(
-    map(emails => this.mapBackendToFrontend(emails)),
-    tap(emails => this.inboxEmailsSubject.next(emails))
-  );
-}
-
-  /**
-   * Get sent emails with mapping
-   */
-  getSentEmails(): Observable<Email[]> {
-    return this.refreshFolder('sent');
+  getInboxEmailsByPriority(): Observable<Email[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/inbox/priority`, {
+      withCredentials: true
+    }).pipe(
+      map(emails => this.mapBackendToFrontend(emails)),
+      tap(emails => this.inboxEmailsSubject.next(emails))
+    );
   }
 
   /**
-   * Get draft emails with mapping
+   * Get sent emails with filters and sorting
    */
-  getDraftEmails(): Observable<Email[]> {
-    return this.refreshFolder('draft');
+  getSentEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.refreshFolder('sent', sort, filters);
   }
 
   /**
-   * Get trash emails with mapping
+   * Get draft emails with filters and sorting
    */
-  getTrashEmails(): Observable<Email[]> {
-    return this.refreshFolder('trash');
+  getDraftEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.refreshFolder('draft', sort, filters);
+  }
+
+  /**
+   * Get trash emails with filters and sorting
+   */
+  getTrashEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.refreshFolder('trash', sort, filters);
+  }
+
+  /**
+   * Search custom folder emails with filtering and sorting
+   */
+  searchCustomFolderEmails(
+    folderId: string,
+    sort: string = 'date-desc',
+    filters?: FilterCriteria
+  ): Observable<Email[]> {
+    const params = new HttpParams().set('sort', sort);
+
+    return this.http.post<any[]>(
+      `${this.apiUrl}/folder/${folderId}/search`,
+      filters || {},
+      {
+        params: params,
+        withCredentials: true
+      }
+    ).pipe(
+      map(emails => this.mapBackendToFrontend(emails))
+    );
+  }
+
+  /**
+   * Get starred emails with filters and sorting
+   */
+  getStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.refreshFolder('starred', sort, filters);
+  }
+
+  /**
+   * Refresh starred emails
+   */
+  refreshStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+    return this.getStarredEmails(sort, filters);
   }
 
   /**
@@ -178,12 +226,11 @@ getInboxEmailsByPriority(): Observable<Email[]> {
   /**
    * Get specific email by ID
    */
- getEmailById(id: string, folder: string): Observable<any> {
-  return this.http.get<any>(`${this.apiUrl}/${id}?folder=${folder}`, {
-    withCredentials: true
-  });
-}
-
+  getEmailById(id: string, folder: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}?folder=${folder}`, {
+      withCredentials: true
+    });
+  }
 
   /**
    * Toggle star status
@@ -194,14 +241,11 @@ getInboxEmailsByPriority(): Observable<Email[]> {
     const email = emails.find(e => e.id === emailId);
 
     if (email) {
-      // Optimistic update
       email.isStarred = !email.isStarred;
       subject.next([...emails]);
 
-      // Call backend
-      this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {},{withCredentials:true}).subscribe({
+      this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}, { withCredentials: true }).subscribe({
         error: (error) => {
-          // Revert on error
           email.isStarred = !email.isStarred;
           subject.next([...emails]);
           console.error('Error toggling star:', error);
@@ -224,64 +268,52 @@ getInboxEmailsByPriority(): Observable<Email[]> {
   /**
    * Compose/send a new email
    */
-  /**
-  * Compose/send a new email
-  */
-composeMail(email: any): Observable<any> {  // Changed from Observable<string> to Observable<any>
-  return this.http.post<any>(`${this.apiUrl}/compose`, email, {
-    // REMOVED responseType: 'text' - this allows Angular to parse JSON automatically
-    withCredentials: true
-  });
-}
+  composeMail(email: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/compose`, email, {
+      withCredentials: true
+    });
+  }
+
   /**
    * Save email as draft
    */
-saveDraft(email: any): Observable<string> {
-  return this.http.post(`${this.apiUrl}/draft/save`, email, {
-    responseType: 'text',
-    withCredentials: true
-  });
-}
-
+  saveDraft(email: any): Observable<string> {
+    return this.http.post(`${this.apiUrl}/draft/save`, email, {
+      responseType: 'text',
+      withCredentials: true
+    });
+  }
 
   /**
    * Delete an email
    */
-deleteEmail(emailId: string, folder: string): Observable<string> {
-  return this.http.delete(`${this.apiUrl}/${emailId}?folder=${folder}`, {
-    responseType: 'text',
-    withCredentials: true
-  });
-}
+  deleteEmail(emailId: string, folder: string): Observable<string> {
+    return this.http.delete(`${this.apiUrl}/${emailId}?folder=${folder}`, {
+      responseType: 'text',
+      withCredentials: true
+    });
+  }
 
   /**
    * Move email to another folder
    */
-moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
-  return this.http.put(
-    `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
-    {},
-    {
-      responseType: 'text',
-      withCredentials: true
-    }
-  );
-}
+  moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<string> {
+    return this.http.put(
+      `${this.apiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
+      {},
+      {
+        responseType: 'text',
+        withCredentials: true
+      }
+    );
+  }
 
-  /**
-   * Get attachment file URL for viewing/downloading
-   */
   /**
    * Get attachment file URL for viewing/downloading
    */
   getAttachmentUrl(filePath: string): string {
-    // Extract just the filename from the full path
-    // Example: "data/uploads/filename.pdf" -> "filename.pdf"
     const filename = filePath.split('/').pop() || filePath;
-
-    // Encode the filename to handle spaces and special characters
     const encodedFilename = encodeURIComponent(filename);
-
     return `http://localhost:8080/api/attachments/uploads/${encodedFilename}`;
   }
 
@@ -290,8 +322,6 @@ moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<str
    */
   downloadAttachment(attachment: Attachment): void {
     const url = this.getAttachmentUrl(attachment.filePath);
-
-    // Create temporary link and trigger download
     const link = document.createElement('a');
     link.href = url;
     link.download = attachment.filename;
@@ -314,11 +344,9 @@ moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<str
    */
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
-
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
@@ -347,30 +375,10 @@ moveEmail(emailId: string, fromFolder: string, toFolder: string): Observable<str
         return this.draftEmailsSubject;
       case 'trash':
         return this.trashEmailsSubject;
+      case 'starred':
+        return this.starredEmailsSubject;
       default:
         return this.inboxEmailsSubject;
     }
   }
-
-
-  getStarredEmails(): Observable<Email[]> {
-  return this.http.get<any[]>(`${this.apiUrl}/starred`, {
-    withCredentials: true
-  }).pipe(
-    map(emails => this.mapBackendToFrontend(emails))
-  );
-}
-
-
-private starredEmailsSubject = new BehaviorSubject<Email[]>([]);
-public starredEmails$ = this.starredEmailsSubject.asObservable();
-
-refreshStarredEmails(): Observable<Email[]> {
-  return this.http.get<any[]>(`${this.apiUrl}/starred`, {
-    withCredentials: true
-  }).pipe(
-    map(emails => this.mapBackendToFrontend(emails)),
-    tap(emails => this.starredEmailsSubject.next(emails))
-  );
-}
 }

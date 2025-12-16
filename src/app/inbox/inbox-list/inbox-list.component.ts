@@ -3,15 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
-import { EmailFilterService } from '../../core/services/email-filter.service';
 import { Email } from '../../core/models/email.model';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { SortCriteria } from '../../core/models/SortCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
 import { FilterModalComponent } from "../../components/filter-modal/filter-modal.component";
-import {FolderData} from "../../components/folder-modal/folder-modal.component";
-import {FolderService} from "../../core/services/folder.service";
+import { FolderData } from "../../components/folder-modal/folder-modal.component";
+import { FolderService } from "../../core/services/folder.service";
 
 @Component({
   selector: 'app-inbox-list',
@@ -21,7 +20,6 @@ import {FolderService} from "../../core/services/folder.service";
   styleUrls: ['./inbox-list.component.css']
 })
 export class InboxListComponent implements OnInit {
-  // Folder configuration
   folderName: string = 'inbox';
   title: string = 'Inbox';
 
@@ -40,11 +38,10 @@ export class InboxListComponent implements OnInit {
   readonly FolderInput = FolderInput;
   readonly X = X;
 
-  // Email data
+  // Email data (now comes directly from backend, already filtered/sorted)
   allEmails: Email[] = [];
   filteredEmails: Email[] = [];
   selectedEmailId: string | null = null;
-
 
   // Search, Sort, Filter
   searchQuery: string = '';
@@ -58,21 +55,18 @@ export class InboxListComponent implements OnInit {
   showActionBar: boolean = false;
   moveToFolder: string = '';
 
-  ///
   folders: FolderData[] = [];
-///
 
   constructor(
     private mailService: MailService,
     private emailStateService: EmailStateService,
-    private emailFilterService: EmailFilterService,
-    private folderService: FolderService //
+    private folderService: FolderService
   ) {}
 
   ngOnInit(): void {
     this.loadEmails();
-    this.loadFolders(); //
-    // Track selected email
+    this.loadFolders();
+
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
@@ -85,38 +79,69 @@ export class InboxListComponent implements OnInit {
   }
 
   /**
-   * Load emails for this folder
+   * Load emails - NOW USES BACKEND FILTERING AND SORTING
    */
   loadEmails(): void {
-    this.mailService.refreshFolder(this.folderName).subscribe(emails => {
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+
+    // Build filter object for backend
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.refreshFolder(this.folderName, sortString, backendFilters).subscribe(emails => {
+      // Backend already filtered and sorted - just use the results
       this.allEmails = emails;
-      this.applyFiltersAndSort();
+      this.filteredEmails = emails;
+      this.totalItems = emails.length;
+      this.updatePagination();
     });
   }
 
   /**
-   * Apply filters and sorting
+   * Convert frontend FilterCriteria to backend format
    */
-  applyFiltersAndSort(): void {
-    // Apply search as part of filter criteria
-    const criteria: FilterCriteria = {
-      ...this.filterCriteria,
-      searchTerm: this.searchQuery
-    };
+  private buildBackendFilters(): any {
+    const filters: any = {};
 
-    // Process emails through filter service
-    this.filteredEmails = this.emailFilterService.processEmails(
-      this.allEmails,
-      criteria,
-      this.sortCriteria
-    );
+    if (this.searchQuery && this.searchQuery.trim()) {
+      filters.searchTerm = this.searchQuery.trim();
+    }
 
-    // Check if filters are active
-    this.hasActiveFilters = this.emailFilterService.hasActiveFilters(criteria);
+    if (this.filterCriteria.dateFrom) {
+      filters.dateFrom = this.filterCriteria.dateFrom;
+    }
 
-    // Update pagination
-    this.totalItems = this.filteredEmails.length;
-    this.updatePagination();
+    if (this.filterCriteria.dateTo) {
+      filters.dateTo = this.filterCriteria.dateTo;
+    }
+
+    if (this.filterCriteria.sender) {
+      filters.sender = this.filterCriteria.sender;
+    }
+
+    if (this.filterCriteria.priority && this.filterCriteria.priority.length > 0) {
+      filters.priority = this.filterCriteria.priority;
+    }
+
+    if (this.filterCriteria.hasAttachment !== undefined) {
+      filters.hasAttachment = this.filterCriteria.hasAttachment;
+    }
+
+    if (this.filterCriteria.isStarred !== undefined) {
+      filters.isStarred = this.filterCriteria.isStarred;
+    }
+
+    if (this.filterCriteria.subjectContains) {
+      filters.subjectContains = this.filterCriteria.subjectContains;
+    }
+
+    if (this.filterCriteria.bodyContains) {
+      filters.bodyContains = this.filterCriteria.bodyContains;
+    }
+
+    // Check if any filters are active
+    this.hasActiveFilters = Object.keys(filters).length > 0;
+
+    return Object.keys(filters).length > 0 ? filters : undefined;
   }
 
   /**
@@ -125,7 +150,7 @@ export class InboxListComponent implements OnInit {
   onSearch(query: string): void {
     this.searchQuery = query;
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend with new search
   }
 
   /**
@@ -134,7 +159,7 @@ export class InboxListComponent implements OnInit {
   onSortChange(value: string): void {
     const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
     this.sortCriteria = { field, direction };
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend with new sort
   }
 
   /**
@@ -157,7 +182,7 @@ export class InboxListComponent implements OnInit {
   onApplyFilters(criteria: FilterCriteria): void {
     this.filterCriteria = criteria;
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend with new filters
   }
 
   /**
@@ -167,7 +192,7 @@ export class InboxListComponent implements OnInit {
     this.filterCriteria = {};
     this.searchQuery = '';
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend without filters
   }
 
   /**
@@ -175,7 +200,7 @@ export class InboxListComponent implements OnInit {
    */
   onEmailClick(email: Email): void {
     this.mailService.markAsRead(email.id);
-    this.emailStateService.selectEmail(email,this.filteredEmails);
+    this.emailStateService.selectEmail(email, this.filteredEmails);
   }
 
   /**
@@ -338,12 +363,12 @@ export class InboxListComponent implements OnInit {
   }
 
   getPriorityColor(priority: number): string {
-    switch(priority) {
-      case 1: return '#dc2626'; // Red - Urgent
-      case 2: return '#ea580c'; // Orange - High
-      case 3: return '#ca8a04'; // Yellow - Medium
-      case 4: return '#65a30d'; // Green - Low
-      default: return '#9ca3af'; // Gray - Default
+    switch (priority) {
+      case 1: return '#dc2626';
+      case 2: return '#ea580c';
+      case 3: return '#ca8a04';
+      case 4: return '#65a30d';
+      default: return '#9ca3af';
     }
   }
 }

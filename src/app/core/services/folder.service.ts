@@ -4,7 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { forkJoin, map, Observable, switchMap } from 'rxjs';
 import { Email } from '../models/email.model';
 import { MailService } from './mail.service';
-import {environment} from "../../../environments/environment1";
+import { environment } from "../../../environments/environment1";
 
 export interface FolderData {
   id?: string;
@@ -24,54 +24,45 @@ export interface FolderRequest {
   providedIn: 'root'
 })
 export class FolderService {
-  private apiUrl = `${environment.apiUrl}/api/folders`;
-  private emailApiUrl = `${environment.apiUrl}/api/emails`;
+  // FIX: Correct API URLs
+  private foldersApiUrl = `${environment.apiUrl}/api/folders`;
+  private mailApiUrl = `${environment.apiUrl}/api/mail`;
 
   constructor(private http: HttpClient, private mailService: MailService) {}
 
   getAllFolders(): Observable<FolderData[]> {
-    return this.http.get<FolderData[]>(this.apiUrl, { withCredentials: true });
+    return this.http.get<FolderData[]>(this.foldersApiUrl, { withCredentials: true });
   }
 
   getFolderById(folderId: string): Observable<FolderData> {
-    return this.http.get<FolderData>(`${this.apiUrl}/${folderId}`, { withCredentials: true });
+    return this.http.get<FolderData>(`${this.foldersApiUrl}/${folderId}`, { withCredentials: true });
   }
 
   createFolder(request: FolderRequest): Observable<FolderData> {
-    return this.http.post<FolderData>(this.apiUrl, request, { withCredentials: true });
+    return this.http.post<FolderData>(this.foldersApiUrl, request, { withCredentials: true });
   }
 
   updateFolder(folderId: string, request: FolderRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${folderId}`, request, { withCredentials: true });
+    return this.http.put<void>(`${this.foldersApiUrl}/${folderId}`, request, { withCredentials: true });
   }
 
-  /**
-   * Fixed deleteFolder:
-   * 1. Gets emails using the raw UUID (correct for api/folders endpoints).
-   * 2. Formats the folder ID with 'folder_' prefix for the MailService call.
-   * 3. Deletes emails via MailService, then deletes the folder.
-   */
   deleteFolder(folderId: string): Observable<void> {
     return this.getEmailsByFolder(folderId).pipe(
       switchMap(emails => {
         if (!emails || emails.length === 0) {
-          return this.http.delete<void>(`${this.apiUrl}/${folderId}`, {
+          return this.http.delete<void>(`${this.foldersApiUrl}/${folderId}`, {
             withCredentials: true
           });
         }
 
-        // FIX: Ensure the folder parameter has the 'folder_' prefix
-        // This matches the pattern used in moveEmailToFolder and other methods
         const folderParam = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
-
-        // Call deleteEmail for each email with the prefixed folder ID
         const deleteEmailObservables = emails.map(email =>
-          this.mailService.deleteEmail(email.id, folderParam) //
+          this.mailService.deleteEmail(email.id, folderParam)
         );
 
         return forkJoin(deleteEmailObservables).pipe(
           switchMap(() =>
-            this.http.delete<void>(`${this.apiUrl}/${folderId}`, {
+            this.http.delete<void>(`${this.foldersApiUrl}/${folderId}`, {
               withCredentials: true
             })
           )
@@ -80,15 +71,48 @@ export class FolderService {
     );
   }
 
+  // FIX: This method now calls the correct endpoint
   getEmailsByFolder(folderId: string): Observable<Email[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${folderId}/emails`, {
+    console.log('🔍 FolderService: Getting emails for folder:', folderId);
+    console.log('🔍 Calling:', `${this.foldersApiUrl}/${folderId}/emails`);
+
+    return this.http.get<any[]>(`${this.foldersApiUrl}/${folderId}/emails`, {
       withCredentials: true
     }).pipe(
-      map(emails => this.mapBackendToFrontend(emails)),
+      map(emails => {
+        console.log('✅ Received emails:', emails);
+        return this.mapBackendToFrontend(emails);
+      })
+    );
+  }
+
+  /**
+   * Search custom folder emails with filtering and sorting
+   */
+  searchCustomFolderEmails(
+    folderId: string,
+    sort: string = 'date-desc',
+    filters?: any
+  ): Observable<Email[]> {
+    const params = new HttpParams().set('sort', sort);
+
+    return this.http.post<any[]>(
+      `${this.mailApiUrl}/folder/${folderId}`,
+      filters || {},
+      {
+        params: params,
+        withCredentials: true
+      }
+    ).pipe(
+      map(emails => this.mapBackendToFrontend(emails))
     );
   }
 
   private mapBackendToFrontend(backendEmails: any[]): Email[] {
+    if (!backendEmails || !Array.isArray(backendEmails)) {
+      return [];
+    }
+
     return backendEmails.map(email => ({
       id: email.id.toString(),
       sender: this.extractSenderName(email.from),
@@ -119,13 +143,13 @@ export class FolderService {
   }
 
   updateFolderCount(folderId: string, count: number): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${folderId}/count`, { count }, {
+    return this.http.patch<void>(`${this.foldersApiUrl}/${folderId}/count`, { count }, {
       withCredentials: true
     });
   }
 
   incrementFolderCount(folderId: string, increment: number): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${folderId}/increment`, { increment }, {
+    return this.http.patch<void>(`${this.foldersApiUrl}/${folderId}/increment`, { increment }, {
       withCredentials: true
     });
   }
@@ -133,8 +157,8 @@ export class FolderService {
   moveEmailToFolder(emailId: string, fromFolder: string, toFolderId: string): Observable<any> {
     const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
     return this.http.put(
-      `${this.emailApiUrl}/${emailId}/move`,
-      { fromFolder, toFolder },
+      `${this.mailApiUrl}/${emailId}/move?fromFolder=${fromFolder}&toFolder=${toFolder}`,
+      {},
       { withCredentials: true }
     );
   }
@@ -142,7 +166,7 @@ export class FolderService {
   bulkMoveToFolder(emailIds: string[], fromFolder: string, toFolderId: string): Observable<any> {
     const toFolder = toFolderId.startsWith('folder_') ? toFolderId : `folder_${toFolderId}`;
     return this.http.put(
-      `${this.emailApiUrl}/bulk-move`,
+      `${this.mailApiUrl}/bulk-move`,
       { emailIds, fromFolder, toFolder },
       { withCredentials: true }
     );
@@ -150,9 +174,7 @@ export class FolderService {
 
   deleteEmailFromFolder(emailId: string, folderId: string): Observable<any> {
     const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
-    const params = new HttpParams().set('folder', folder);
-    return this.http.delete(`${this.emailApiUrl}/${emailId}`, {
-      params,
+    return this.http.delete(`${this.mailApiUrl}/${emailId}?folder=${folder}`, {
       withCredentials: true
     });
   }
@@ -161,7 +183,7 @@ export class FolderService {
     const folder = folderId.startsWith('folder_') ? folderId : `folder_${folderId}`;
     return this.http.request(
       'delete',
-      `${this.emailApiUrl}/bulk-delete`,
+      `${this.mailApiUrl}/bulk-delete`,
       {
         body: { emailIds, folderId: folder },
         withCredentials: true
@@ -170,16 +192,12 @@ export class FolderService {
   }
 
   markAsRead(emailId: string): Observable<any> {
-    return this.http.patch(`${this.emailApiUrl}/${emailId}/read`, {}, { withCredentials: true });
+    return this.http.patch(`${this.mailApiUrl}/${emailId}/read`, {}, { withCredentials: true });
   }
 
   toggleStar(emailId: string, folderId?: string): Observable<any> {
-    let params = new HttpParams();
-    if (folderId) {
-      params = params.set('folderId', folderId);
-    }
-    return this.http.patch(`${this.emailApiUrl}/${emailId}/star`, {}, {
-      params,
+    const folder = folderId ? (folderId.startsWith('folder_') ? folderId : `folder_${folderId}`) : 'inbox';
+    return this.http.put(`${this.mailApiUrl}/${emailId}/star?folder=${folder}`, {}, {
       withCredentials: true
     });
   }

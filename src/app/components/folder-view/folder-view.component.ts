@@ -6,12 +6,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MailService } from '../../core/services/mail.service';
 import { FolderService } from '../../core/services/folder.service';
 import { EmailStateService } from '../../core/services/email-state.service';
-import { EmailFilterService } from '../../core/services/email-filter.service';
 import { Email } from '../../core/models/email.model';
 import { SortCriteria } from '../../core/models/SortCriteria';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X, Edit, ArrowLeft } from 'lucide-angular';
-import { PaginationComponent } from "../../components/pagination/pagination.component";
+import { PaginationComponent } from "../pagination/pagination.component";
 import {FolderData} from "../folder-modal/folder-modal.component";
 import {FilterModalComponent} from "../filter-modal/filter-modal.component";
 
@@ -73,7 +72,6 @@ export class FolderViewComponent implements OnInit {
     private mailService: MailService, // Existing mail service
     private folderService: FolderService, // New folder service
     private emailStateService: EmailStateService,
-    private emailFilterService: EmailFilterService
   ) {}
 
   ngOnInit(): void {
@@ -113,21 +111,6 @@ export class FolderViewComponent implements OnInit {
     });
   }
 
-  /**
-   * Load emails from backend for this folder using FolderService
-   */
-  loadEmails(): void {
-    this.folderService.getEmailsByFolder(this.folderId).subscribe({
-      next: (emails) => {
-        this.allEmails = emails;
-        this.applyFiltersAndSort();
-      },
-      error: (error) => {
-        console.error('Error loading emails:', error);
-        alert('Failed to load emails');
-      }
-    });
-  }
 
   goBack(): void {
     this.router.navigate(['/folders']);
@@ -158,28 +141,74 @@ export class FolderViewComponent implements OnInit {
   }
 
   /**
-   * Apply filters and sorting
+   * Load emails from custom folder with backend filtering
    */
-  applyFiltersAndSort(): void {
-    // Apply search as part of filter criteria
-    const criteria: FilterCriteria = {
-      ...this.filterCriteria,
-      searchTerm: this.searchQuery
-    };
+  loadEmails(): void {
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+    const backendFilters = this.buildBackendFilters();
 
-    // Process emails through filter service
-    this.filteredEmails = this.emailFilterService.processEmails(
-      this.allEmails,
-      criteria,
-      this.sortCriteria
-    );
+    // Use the searchCustomFolderEmails method (POST endpoint)
+    this.folderService.searchCustomFolderEmails(this.folderId, sortString, backendFilters).subscribe({
+      next: (emails) => {
+        console.log('✅ Emails loaded:', emails);
+        this.allEmails = emails;
+        this.filteredEmails = emails;
+        this.totalItems = emails.length;
+        this.updatePagination();
+      },
+      error: (error) => {
+        console.error('❌ Error loading emails:', error);
+        alert('Failed to load emails');
+      }
+    });
+  }
 
-    // Check if filters are active
-    this.hasActiveFilters = this.emailFilterService.hasActiveFilters(criteria);
+  /**
+   * Convert frontend FilterCriteria to backend format
+   */
+  private buildBackendFilters(): any {
+    const filters: any = {};
 
-    // Update pagination
-    this.totalItems = this.filteredEmails.length;
-    this.updatePagination();
+    if (this.searchQuery && this.searchQuery.trim()) {
+      filters.searchTerm = this.searchQuery.trim();
+    }
+
+    if (this.filterCriteria.dateFrom) {
+      filters.dateFrom = this.filterCriteria.dateFrom;
+    }
+
+    if (this.filterCriteria.dateTo) {
+      filters.dateTo = this.filterCriteria.dateTo;
+    }
+
+    if (this.filterCriteria.sender) {
+      filters.sender = this.filterCriteria.sender;
+    }
+
+    if (this.filterCriteria.priority && this.filterCriteria.priority.length > 0) {
+      filters.priority = this.filterCriteria.priority;
+    }
+
+    if (this.filterCriteria.hasAttachment !== undefined) {
+      filters.hasAttachment = this.filterCriteria.hasAttachment;
+    }
+
+    if (this.filterCriteria.isStarred !== undefined) {
+      filters.isStarred = this.filterCriteria.isStarred;
+    }
+
+    if (this.filterCriteria.subjectContains) {
+      filters.subjectContains = this.filterCriteria.subjectContains;
+    }
+
+    if (this.filterCriteria.bodyContains) {
+      filters.bodyContains = this.filterCriteria.bodyContains;
+    }
+
+    // Check if any filters are active
+    this.hasActiveFilters = Object.keys(filters).length > 0;
+
+    return Object.keys(filters).length > 0 ? filters : undefined;
   }
 
   /**
@@ -188,7 +217,7 @@ export class FolderViewComponent implements OnInit {
   onSearch(query: string): void {
     this.searchQuery = query;
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend with new search
   }
 
   /**
@@ -197,7 +226,7 @@ export class FolderViewComponent implements OnInit {
   onSortChange(value: string): void {
     const [field, direction] = value.split('-') as [SortCriteria['field'], SortCriteria['direction']];
     this.sortCriteria = { field, direction };
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend with new sort
   }
 
   /**
@@ -220,7 +249,7 @@ export class FolderViewComponent implements OnInit {
   onApplyFilters(criteria: FilterCriteria): void {
     this.filterCriteria = criteria;
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend with new filters
   }
 
   /**
@@ -230,7 +259,7 @@ export class FolderViewComponent implements OnInit {
     this.filterCriteria = {};
     this.searchQuery = '';
     this.currentPage = 1;
-    this.applyFiltersAndSort();
+    this.loadEmails(); // Reload from backend without filters
   }
 
   // Pagination
