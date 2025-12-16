@@ -9,7 +9,7 @@ import { LucideAngularModule, Home, Mail, AlertCircle } from 'lucide-angular';
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   templateUrl:'./not-found.component.html',
-  styleUrl: '.not-found.component.css'
+  styleUrl: './not-found.component.css'
 })
 export class NotFoundComponent implements OnInit {
   readonly Home = Home;
