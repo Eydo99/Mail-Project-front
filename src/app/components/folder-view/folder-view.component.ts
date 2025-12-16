@@ -127,15 +127,28 @@ export class FolderViewComponent implements OnInit {
     this.emailStateService.selectEmail(email,this.filteredEmails);
   }
 
+  /**
+   * Toggle star - With optimistic UI update for instant feedback
+   */
   toggleStar(event: Event, email: Email): void {
     event.stopPropagation();
-    // Use FolderService with folder ID
-    this.folderService.toggleStar(email.id, this.folderId).subscribe({
-      next: () => {
-        email.isStarred = !email.isStarred;
+
+    console.log('⭐ Toggling star for email:', email.id);
+
+    // Optimistic UI update - change immediately for instant feedback
+    const previousStarredState = email.isStarred;
+    email.isStarred = !email.isStarred;
+
+    this.mailService.toggleStar(email.id, this.folderName).subscribe({
+      next: (response) => {
+        console.log('✅ Star toggled successfully:', response);
+        // UI already updated optimistically, service will refresh in background
       },
       error: (error) => {
-        console.error('Error toggling star:', error);
+        console.error('❌ Error toggling star:', error);
+        // Revert the optimistic update on error
+        email.isStarred = previousStarredState;
+        alert('Failed to toggle star. Please try again.');
       }
     });
   }

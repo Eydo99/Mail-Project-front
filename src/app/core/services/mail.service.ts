@@ -232,41 +232,39 @@ getStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]>
       withCredentials: true
     });
   }
-
   /**
-   * Toggle star status
+   * Toggle star status - FIXED VERSION
+   * Properly refreshes both the current folder and starred folder
    */
-  /**
- * Toggle star status
- */
-toggleStar(emailId: string, folder: string = 'inbox'): Observable<any> {
-  const subject = this.getSubjectByFolder(folder);
-  const emails = subject.value;
-  const email = emails.find(e => e.id === emailId);
+  toggleStar(emailId: string, folder: string = 'inbox'): Observable<any> {
+    console.log(`⭐ Toggling star for email ${emailId} in folder ${folder}`);
 
-  if (email) {
-    // Optimistically update UI
-    email.isStarred = !email.isStarred;
-    subject.next([...emails]);
-
-    return this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}, { withCredentials: true }).pipe(
+    return this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}, {
+      withCredentials: true
+    }).pipe(
       tap({
+        next: () => {
+          console.log(`✅ Star toggled successfully for email ${emailId}`);
+
+          // CRITICAL: Refresh the folder where the email exists
+          // This ensures the star change persists when you navigate back
+          this.refreshFolder(folder, 'date-desc').subscribe({
+            next: () => console.log(`✅ Refreshed ${folder} folder`),
+            error: (err) => console.error(`❌ Failed to refresh ${folder}:`, err)
+          });
+
+          // CRITICAL: Also refresh starred folder to update the starred view
+          this.refreshFolder('starred', 'date-desc').subscribe({
+            next: () => console.log(`✅ Refreshed starred folder`),
+            error: (err) => console.error(`❌ Failed to refresh starred:`, err)
+          });
+        },
         error: (error) => {
-          // Revert on error
-          email.isStarred = !email.isStarred;
-          subject.next([...emails]);
-          console.error('Error toggling star:', error);
+          console.error('❌ Error toggling star:', error);
         }
       })
     );
   }
-
-  // Return empty observable if email not found
-  return new Observable(observer => {
-    observer.error('Email not found');
-    observer.complete();
-  });
-}
 
   /**
    * Mark email as read

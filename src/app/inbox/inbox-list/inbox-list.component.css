@@ -558,3 +558,31 @@
   color: #999;
   margin: 0;
 }
+
+.star-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.star-icon:hover {
+  transform: scale(1.2);
+}
+
+.star-icon:active {
+  transform: scale(0.9);
+}
+
+.star-icon.starred {
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
+}
+
+.star-icon path {
+  transition: all 0.2s ease;
+}
+
+.star-icon:not(.starred):hover path {
+  stroke: #fbbf24;
+}

@@ -440,26 +440,34 @@
   transition: all 0.2s;
 }
 
-/* Star icon */
 .star-icon {
-  fill: none;
-  stroke: #456882;
-}
-
-.star-icon.starred {
-  fill: #FFA500;
-  stroke: #FFA500;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .star-icon:hover {
   transform: scale(1.2);
-  stroke: #234C6A;
 }
 
-.star-icon.starred:hover {
-  fill: #FF8C00;
-  stroke: #FF8C00;
+.star-icon:active {
+  transform: scale(0.9);
 }
+
+.star-icon.starred {
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
+}
+
+.star-icon path {
+  transition: all 0.2s ease;
+}
+
+.star-icon:not(.starred):hover path {
+  stroke: #fbbf24;
+}
+
 
 /* Attachment icon */
 .attachment-icon {

@@ -113,13 +113,22 @@
             [style.background-color]="getPriorityColor(email.priority)"
           ></span>
           <span class="email-sender">{{ email.sender }}</span>
-
-          <lucide-icon
-            [img]="Star"
-            [class.starred]="email.isStarred"
+          <svg
             class="icon star-icon"
+            [class.starred]="email.isStarred"
             (click)="toggleStar($event, email)"
-          ></lucide-icon>
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+              [attr.fill]="email.isStarred ? '#fbbf24' : 'none'"
+              [attr.stroke]="email.isStarred ? '#f59e0b' : '#9ca3af'"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
 
           <lucide-icon
             *ngIf="email.hasAttachment"

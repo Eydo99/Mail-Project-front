@@ -72,7 +72,7 @@ export class StarredListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadEmails();
     this.loadFolders();
-    
+
     // Track selected email
     this.emailStateService.selectedEmail$
       .pipe(takeUntil(this.destroy$))
@@ -101,7 +101,7 @@ export class StarredListComponent implements OnInit, OnDestroy {
   loadEmails(): void {
     // Build sort string for backend (e.g., "date-desc", "subject-asc")
     const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
-    
+
     // Convert frontend filters to backend format
     const backendFilters = this.buildBackendFilters();
 
@@ -245,37 +245,30 @@ export class StarredListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Toggle star (unstar from starred view)
-   * FIXED: Use the original folder where the email actually exists
+   * Toggle star (unstar) - SIMPLIFIED VERSION
+   * No need for manual refresh - service handles it
    */
-  /**
- * Toggle star (unstar)
- */
-/**
- * Toggle star (unstar)
- */
-toggleStar(event: Event, email: Email): void {
-  event.stopPropagation();
-  
-  // Use the original folder stored in the email object
-  const originalFolder = email.folder || 'inbox'; // fallback to inbox if not set
-  
-  console.log(`⭐ Toggling star for email ${email.id} in original folder: ${originalFolder}`);
-  
-  this.mailService.toggleStar(email.id, originalFolder).pipe(
-    takeUntil(this.destroy$)
-  ).subscribe({
-    next: () => {
-      console.log(`✅ Successfully toggled star for email ${email.id}`);
-      // Refresh starred list after a short delay
-      setTimeout(() => this.loadEmails(), 200);
-    },
-    error: (error) => {
-      console.error('❌ Error toggling star:', error);
-      alert('Failed to toggle star. Please try again.');
-    }
-  });
-}
+  toggleStar(event: Event, email: Email): void {
+    event.stopPropagation();
+
+    // Use the original folder stored in the email object
+    const originalFolder = email.folder || 'inbox'; // fallback to inbox if not set
+
+    console.log(`⭐ Toggling star for email ${email.id} in original folder: ${originalFolder}`);
+
+    this.mailService.toggleStar(email.id, originalFolder).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        console.log(`✅ Successfully toggled star for email ${email.id}`);
+        // Service automatically refreshes both folders - no manual refresh needed
+      },
+      error: (error) => {
+        console.error('❌ Error toggling star:', error);
+        alert('Failed to toggle star. Please try again.');
+      }
+    });
+  }
 
   /**
    * Get the original folder where the email exists
@@ -286,12 +279,12 @@ toggleStar(event: Event, email: Email): void {
     if (email.folder) {
       return email.folder;
     }
-    
+
     // Fallback: try to determine from email properties
     // If email has 'to' field and no 'from' matching current user, it's likely inbox
     // If email has 'from' matching current user, it's likely sent
     // This is a best guess and might not always be accurate
-    
+
     // For now, default to 'inbox' as most starred emails are from inbox
     // You should update your backend to include the folder property in starred emails
     console.warn(`Email ${email.id} missing folder property, defaulting to 'inbox'`);
@@ -386,7 +379,7 @@ toggleStar(event: Event, email: Email): void {
       // Find the email to get its original folder
       const email = this.allEmails.find(e => e.id === emailId);
       const originalFolder = email ? this.getOriginalFolder(email) : 'inbox';
-      
+
       this.mailService.deleteEmail(emailId, originalFolder)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -424,7 +417,7 @@ toggleStar(event: Event, email: Email): void {
       // Find the email to get its original folder
       const email = this.allEmails.find(e => e.id === emailId);
       const originalFolder = email ? this.getOriginalFolder(email) : 'inbox';
-      
+
       this.mailService.moveEmail(emailId, originalFolder, this.moveToFolder)
         .pipe(takeUntil(this.destroy$))
         .subscribe({

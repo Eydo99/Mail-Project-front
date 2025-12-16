@@ -396,27 +396,34 @@
   transition: all 0.2s;
 }
 
-/* Star icon - ALWAYS GOLDEN FILLED FOR STARRED PAGE */
 .star-icon {
-  fill: none;
-  stroke: #456882;
-}
-
-.star-icon.starred {
-  fill: #fbbf24;
-  stroke: #f59e0b;
-  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .star-icon:hover {
   transform: scale(1.2);
 }
 
-.star-icon.starred:hover {
-  fill: #f59e0b;
-  stroke: #d97706;
-  transform: scale(1.2) rotate(15deg);
+.star-icon:active {
+  transform: scale(0.9);
 }
+
+.star-icon.starred {
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
+}
+
+.star-icon path {
+  transition: all 0.2s ease;
+}
+
+.star-icon:not(.starred):hover path {
+  stroke: #fbbf24;
+}
+
 
 /* Attachment icon */
 .attachment-icon {

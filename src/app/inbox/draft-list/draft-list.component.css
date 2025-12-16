@@ -558,3 +558,74 @@
   color: #999;
   margin: 0;
 }
+
+/* Star icon styling */
+.star-icon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  stroke: #9ca3af; /* Gray stroke by default */
+  fill: none; /* Not filled by default */
+}
+
+.star-icon:hover {
+  transform: scale(1.2);
+  stroke: #fbbf24; /* Yellow on hover */
+}
+
+/* When email is starred */
+.star-icon.starred {
+  fill: #fbbf24 !important; /* Yellow fill */
+  stroke: #f59e0b !important; /* Darker yellow stroke */
+}
+
+/* Add active state for click feedback */
+.star-icon:active {
+  transform: scale(0.9);
+}
+
+/* Optional: Add a glow effect when starred */
+.star-icon.starred {
+  filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.5));
+}
+
+/* Make sure the icon is clickable and positioned correctly */
+.email-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.star-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.star-icon:hover {
+  transform: scale(1.2);
+}
+
+.star-icon:active {
+  transform: scale(0.9);
+}
+
+.star-icon.starred {
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
+}
+
+.star-icon path {
+  transition: all 0.2s ease;
+}
+
+.star-icon:not(.starred):hover path {
+  stroke: #fbbf24;
+}
+
