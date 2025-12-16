@@ -48,7 +48,8 @@ export class MailService {
       isStarred: email.starred,
       hasAttachment: email.hasAttachment,
       priority: email.priority,
-      attachments: email.attachments || []
+      attachments: email.attachments || [] ,
+      folder: email.folder || 'inbox'
     }));
   }
 
@@ -203,11 +204,11 @@ export class MailService {
   }
 
   /**
-   * Get starred emails with filters and sorting
-   */
-  getStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
-    return this.refreshFolder('starred', sort, filters);
-  }
+ * Get starred emails with filters and sorting
+ */
+getStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]> {
+  return this.refreshFolder('starred', sort, filters);
+}
 
   /**
    * Refresh starred emails
@@ -235,24 +236,37 @@ export class MailService {
   /**
    * Toggle star status
    */
-  toggleStar(emailId: string, folder: string = 'inbox'): void {
-    const subject = this.getSubjectByFolder(folder);
-    const emails = subject.value;
-    const email = emails.find(e => e.id === emailId);
+  /**
+ * Toggle star status
+ */
+toggleStar(emailId: string, folder: string = 'inbox'): Observable<any> {
+  const subject = this.getSubjectByFolder(folder);
+  const emails = subject.value;
+  const email = emails.find(e => e.id === emailId);
 
-    if (email) {
-      email.isStarred = !email.isStarred;
-      subject.next([...emails]);
+  if (email) {
+    // Optimistically update UI
+    email.isStarred = !email.isStarred;
+    subject.next([...emails]);
 
-      this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}, { withCredentials: true }).subscribe({
+    return this.http.put(`${this.apiUrl}/${emailId}/star?folder=${folder}`, {}, { withCredentials: true }).pipe(
+      tap({
         error: (error) => {
+          // Revert on error
           email.isStarred = !email.isStarred;
           subject.next([...emails]);
           console.error('Error toggling star:', error);
         }
-      });
-    }
+      })
+    );
   }
+
+  // Return empty observable if email not found
+  return new Observable(observer => {
+    observer.error('Email not found');
+    observer.complete();
+  });
+}
 
   /**
    * Mark email as read
