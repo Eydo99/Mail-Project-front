@@ -12,15 +12,16 @@ import { PriorityInboxComponent } from "./inbox/priority-inbox/priority-inbox.co
 import { SentListComponent } from "./inbox/sent-list/sent-list.component";
 import { DraftListComponent } from "./inbox/draft-list/draft-list.component";
 import { SettingsComponent } from "./components/settings/settings.component"
+import {NotFoundComponent} from "./components/not-found/not-found.component";
 
 export const routes: Routes = [
   // Default route goes to login page
   { path: '', redirectTo: 'inbox', pathMatch: 'full' },
-  
+
   // Public routes
   { path: 'login', component: LoginComponent },
   { path: 'signup', component: SignupComponent },
-  
+
   // Protected Shell section
   {
     path: '',
@@ -38,7 +39,7 @@ export const routes: Routes = [
       { path: 'settings', component: SettingsComponent }, // Added settings route
     ],
   },
-  
+
   // Unknown routes → Login
-  { path: '**', redirectTo: 'login' },
+  { path: '**', component:NotFoundComponent },
 ];
