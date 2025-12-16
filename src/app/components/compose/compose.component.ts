@@ -27,6 +27,8 @@ export class ComposeComponent implements OnInit, OnDestroy {
   body: string = '';
   priority: string = 'normal';
   attachments: File[] = [];
+  // NEW: Store existing attachments from draft separately
+  existingAttachments: any[] = [];
 
   isLoading: boolean = false;
   errorMessage: string = '';
@@ -52,27 +54,35 @@ export class ComposeComponent implements OnInit, OnDestroy {
           ? data.originalSubject
           : `Re: ${data.originalSubject}`;
         this.body = `${data.originalBody}`;
+        this.existingAttachments = [];
+
       } else if (data.isForwardMode) {
         this.to = '';
         this.subject = data.originalSubject
           ? data.originalSubject
           : `Fwd: ${data.originalSubject}`;
         this.body = `${data.originalBody}`;
+        this.existingAttachments = [];
       } else if (data.isDraftMode) {
         this.to = '';
         this.subject = data.originalSubject;
         this.body = data.originalBody;
         this.priority = data.originalPriority || 'normal';
+        // Store existing attachments from draft
+        this.existingAttachments = data.originalAttachments || [];
       } else if (data.isEditDraftMode) {
         this.to = '';
         this.subject = data.originalSubject;
         this.body = data.originalBody;
         this.priority = data.originalPriority || 'normal';
+        // Store existing attachments from draft
+        this.existingAttachments = data.originalAttachments || [];
       } else {
         this.to = '';
         this.subject = '';
         this.body = '';
         this.attachments = [];
+        this.existingAttachments = [];
         this.priority = 'normal';
       }
     });
@@ -108,13 +118,16 @@ export class ComposeComponent implements OnInit, OnDestroy {
 
     // Convert attachments to DTO format
     const attachmentDTOs = await this.convertAttachments();
+    // NEW: Combine existing attachments with new ones
+    const newAttachmentDTOs = await this.convertAttachments();
+    const allAttachments = [...this.existingAttachments, ...newAttachmentDTOs];
 
     // Match your mailContentDTO structure
     const mailContent = {
       body: this.body,
       subject: this.subject,
       recipients: recipients,
-      attachements: attachmentDTOs,
+      attachements: allAttachments,
       piriority: priorityMap[this.priority]
     };
 
@@ -191,66 +204,69 @@ export class ComposeComponent implements OnInit, OnDestroy {
     });
   }
   async onSaveDraft(): Promise<void> {
-  this.isLoading = true;
-  this.errorMessage = '';
-  this.successMessage = '';
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-  const priorityMap: { [key: string]: number } = {
-    'low': 4,
-    'normal': 3,
-    'high': 2,
-    'urgent': 1
-  };
+    const priorityMap: { [key: string]: number } = {
+      'low': 4,
+      'normal': 3,
+      'high': 2,
+      'urgent': 1
+    };
 
-  const recipients = this.to.split(',').map(email => email.trim()).filter(email => email);
-  const attachmentDTOs = await this.convertAttachments();
+ const recipients = this.to.split(',').map(email => email.trim()).filter(email => email);
 
-  const mailContent = {
-    body: this.body,
-    subject: this.subject,
-    recipients: recipients,
-    attachements: attachmentDTOs,
-    piriority: priorityMap[this.priority]
-  };
+// NEW: Combine existing attachments with new ones for draft
+const newAttachmentDTOs = await this.convertAttachments();
+const allAttachments = [...this.existingAttachments, ...newAttachmentDTOs];
 
-  // If editing an existing draft, delete the old one first
-  if (this.isEditDraftMode && this.draftId) {
-    this.mailService.deleteEmail(this.draftId, 'draft').subscribe({
-      next: () => {
-        // Save the updated draft
-        this.saveDraftToServer(mailContent);
+    const mailContent = {
+      body: this.body,
+      subject: this.subject,
+      recipients: recipients,
+      attachements: allAttachments,
+      piriority: priorityMap[this.priority]
+    };
+
+    // If editing an existing draft, delete the old one first
+    if (this.isEditDraftMode && this.draftId) {
+      this.mailService.deleteEmail(this.draftId, 'draft').subscribe({
+        next: () => {
+          // Save the updated draft
+          this.saveDraftToServer(mailContent);
+        },
+        error: (error) => {
+          console.error('Error deleting old draft:', error);
+          this.errorMessage = 'Failed to update draft. Please try again.';
+          this.isLoading = false;
+        }
+      });
+    } else {
+      // New draft
+      this.saveDraftToServer(mailContent);
+    }
+  }
+
+  private saveDraftToServer(mailContent: any): void {
+    this.mailService.saveDraft(mailContent).subscribe({
+      next: (response) => {
+        console.log('Draft saved successfully:', response);
+        this.successMessage = 'Draft saved successfully!';
+        this.isLoading = false;
+
+        // Refresh draft folder
+        this.mailService.refreshFolder('draft').subscribe();
+
+        setTimeout(() => this.close.emit(), 1500);
       },
       error: (error) => {
-        console.error('Error deleting old draft:', error);
-        this.errorMessage = 'Failed to update draft. Please try again.';
+        console.error('Error saving draft:', error);
+        this.errorMessage = 'Failed to save draft. Please try again.';
         this.isLoading = false;
       }
     });
-  } else {
-    // New draft
-    this.saveDraftToServer(mailContent);
   }
-}
-
-private saveDraftToServer(mailContent: any): void {
-  this.mailService.saveDraft(mailContent).subscribe({
-    next: (response) => {
-      console.log('Draft saved successfully:', response);
-      this.successMessage = 'Draft saved successfully!';
-      this.isLoading = false;
-      
-      // Refresh draft folder
-      this.mailService.refreshFolder('draft').subscribe();
-      
-      setTimeout(() => this.close.emit(), 1500);
-    },
-    error: (error) => {
-      console.error('Error saving draft:', error);
-      this.errorMessage = 'Failed to save draft. Please try again.';
-      this.isLoading = false;
-    }
-  });
-}
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -264,6 +280,10 @@ private saveDraftToServer(mailContent: any): void {
   removeAttachment(index: number): void {
     this.attachments.splice(index, 1);
   }
+  // NEW: Remove existing attachment
+removeExistingAttachment(index: number): void {
+  this.existingAttachments.splice(index, 1);
+}
 
   /**
    * Convert File to base64 string
