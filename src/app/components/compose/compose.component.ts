@@ -69,15 +69,22 @@ export class ComposeComponent implements OnInit, OnDestroy {
         this.body = data.originalBody;
         this.priority = data.originalPriority || 'normal';
         // Store existing attachments from draft
-        this.existingAttachments = data.originalAttachments || [];
+        // Store existing attachments from draft
+        this.existingAttachments = data.originalAttachments
+          ? JSON.parse(JSON.stringify(data.originalAttachments))
+          : [];
       } else if (data.isEditDraftMode) {
         this.to = '';
         this.subject = data.originalSubject;
         this.body = data.originalBody;
         this.priority = data.originalPriority || 'normal';
         // Store existing attachments from draft
-        this.existingAttachments = data.originalAttachments || [];
-      } else {
+        // Store existing attachments from draft
+        this.existingAttachments = data.originalAttachments
+          ? JSON.parse(JSON.stringify(data.originalAttachments))
+          : [];
+      }
+      else {
         this.to = '';
         this.subject = '';
         this.body = '';
@@ -88,6 +95,10 @@ export class ComposeComponent implements OnInit, OnDestroy {
     });
   }
   onClose(): void {
+    // Reset form state when closing
+    this.attachments = [];
+    this.errorMessage = '';
+    this.successMessage = '';
     this.close.emit();
   }
   ngOnDestroy(): void {
