@@ -182,8 +182,10 @@ export class FolderViewComponent implements OnInit {
   private buildBackendFilters(): any {
     const filters: any = {};
 
-    if (this.searchQuery && this.searchQuery.trim()) {
-      filters.searchTerm = this.searchQuery.trim();
+    // ✅ FIX: Check BOTH searchQuery (from toolbar) AND filterCriteria.searchTerm (from modal)
+    const searchText = this.searchQuery || this.filterCriteria.searchTerm;
+    if (searchText && searchText.trim()) {
+      filters.searchTerm = searchText.trim();
     }
 
     if (this.filterCriteria.dateFrom) {
@@ -221,7 +223,7 @@ export class FolderViewComponent implements OnInit {
     // Check if any filters are active
     this.hasActiveFilters = Object.keys(filters).length > 0;
 
-    return Object.keys(filters).length > 0 ? filters : undefined;
+    return filters;
   }
 
   /**
@@ -260,9 +262,16 @@ export class FolderViewComponent implements OnInit {
    * Apply filters from modal
    */
   onApplyFilters(criteria: FilterCriteria): void {
+    console.log('📋 Applying filters:', criteria);
     this.filterCriteria = criteria;
+
+    // ✅ FIX: Sync the toolbar search input with the filter modal search
+    if (criteria.searchTerm) {
+      this.searchQuery = criteria.searchTerm;
+    }
+
     this.currentPage = 1;
-    this.loadEmails(); // Reload from backend with new filters
+    this.loadEmails();
   }
 
   /**

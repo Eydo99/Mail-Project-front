@@ -4,7 +4,9 @@ import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Email } from '../models/email.model';
 import { Attachment } from "../models/attachment";
 import { environment } from "../../../environments/environment1";
-import {FilterCriteria} from "../../core/models/FilterCriteria"
+import {FilterCriteria} from "../models/FilterCriteria"
+import { interval, Subscription,Subject } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +20,21 @@ export class MailService {
   private draftEmailsSubject = new BehaviorSubject<Email[]>([]);
   private trashEmailsSubject = new BehaviorSubject<Email[]>([]);
   private starredEmailsSubject = new BehaviorSubject<Email[]>([]);
+  private newEmailNotification = new Subject<void>();
+// Track pending updates per folder
+  private hasPendingUpdatesMap = new Map<string, BehaviorSubject<boolean>>([
+    ['inbox', new BehaviorSubject<boolean>(false)],
+    ['sent', new BehaviorSubject<boolean>(false)],
+    ['draft', new BehaviorSubject<boolean>(false)],
+    ['trash', new BehaviorSubject<boolean>(false)],
+    ['starred', new BehaviorSubject<boolean>(false)]
+  ]);
+
+  private pendingInboxEmails: Email[] = [];
+  private pendingSentEmails: Email[] = [];
+  private pendingDraftEmails: Email[] = [];
+  private pendingTrashEmails: Email[] = [];
+  private pendingStarredEmails: Email[] = [];
 
   // Public observables
   public inboxEmails$ = this.inboxEmailsSubject.asObservable();
@@ -25,9 +42,24 @@ export class MailService {
   public draftEmails$ = this.draftEmailsSubject.asObservable();
   public trashEmails$ = this.trashEmailsSubject.asObservable();
   public starredEmails$ = this.starredEmailsSubject.asObservable();
+  public newEmail$ = this.newEmailNotification.asObservable();
+  /**
+   * Get pending updates observable for a specific folder
+   */
+  getPendingUpdates$(folder: string): Observable<boolean> {
+    const subject = this.hasPendingUpdatesMap.get(folder);
+    return subject ? subject.asObservable() : new BehaviorSubject<boolean>(false).asObservable();
+  }
 
   // Keep for backward compatibility
   public emails$ = this.inboxEmails$;
+  private pendingUpdatesMap = new Map<string, boolean>();
+  // Polling configuration
+  private pollingInterval = 5000; // 5 seconds
+  private pollingSubscription?: Subscription;
+  private currentFolder: string = 'inbox';
+  private currentSort: string = 'date-desc';
+  private currentFilters: any = {};
 
   constructor(private http: HttpClient) {
     this.loadInboxEmails();
@@ -280,10 +312,26 @@ getStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]>
   /**
    * Compose/send a new email
    */
+  /**
+   * Compose/send a new email
+   */
   composeMail(email: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/compose`, email, {
       withCredentials: true
-    });
+    }).pipe(
+      tap(() => {
+        console.log('📧 Email sent - refreshing sent folder and notifying system');
+
+        // ✅ CRITICAL: Refresh the sent folder immediately so it appears in the sent list
+        this.refreshFolder('sent', 'date-desc').subscribe({
+          next: () => console.log('✅ Sent folder refreshed'),
+          error: (err) => console.error('❌ Failed to refresh sent folder:', err)
+        });
+
+        // Notify that email was sent - recipients should refresh their inbox
+        this.newEmailNotification.next();
+      })
+    );
   }
 
   /**
@@ -392,5 +440,166 @@ getStarredEmails(sort: string = 'date-desc', filters?: any): Observable<Email[]>
       default:
         return this.inboxEmailsSubject;
     }
+  }
+
+
+  /**
+   * Start automatic polling for a folder
+   */
+  startPolling(folder: string, sort: string = 'date-desc', filters?: any): void {
+    console.log(`🔄 Starting polling for ${folder}`);
+
+    this.stopPolling();
+    this.currentFolder = folder;
+    this.currentSort = sort;
+    this.currentFilters = filters || {};
+
+    // Fetch immediately and display
+    this.refreshFolder(folder, sort, filters).subscribe();
+
+    // Then poll at intervals - but HOLD results
+    this.pollingSubscription = interval(this.pollingInterval)
+      .pipe(
+        switchMap(() => {
+          return this.http.post<any[]>(`${this.apiUrl}/${folder}`, filters || {}, {
+            params: { sort },
+            withCredentials: true
+          }).pipe(
+            map(emails => this.mapBackendToFrontend(emails))
+          );
+        })
+      )
+      .subscribe({
+        next: (newEmails) => {
+          console.log(`🔍 Polling found ${newEmails.length} emails`);
+
+          // Get current displayed emails
+          const currentSubject = this.getSubjectByFolder(folder);
+          const currentEmails = currentSubject.value;
+
+          // Check if there are NEW emails
+          if (newEmails.length > currentEmails.length) {
+            console.log(`🔔 ${newEmails.length - currentEmails.length} new emails detected - HOLDING`);
+
+            // Store pending emails (don't display yet)
+            this.storePendingEmails(folder, newEmails);
+          } else {
+            console.log('✅ No new emails');
+          }
+        },
+        error: (error) => {
+          console.error('❌ Polling error:', error);
+        }
+      });
+  }
+
+
+  // ADD method to store pending emails:
+  private storePendingEmails(folder: string, emails: Email[]): void {
+    switch (folder) {
+      case 'inbox':
+        this.pendingInboxEmails = emails;
+        break;
+      case 'sent':
+        this.pendingSentEmails = emails;
+        break;
+      case 'draft':
+        this.pendingDraftEmails = emails;
+        break;
+      case 'trash':
+        this.pendingTrashEmails = emails;
+        break;
+      case 'starred':
+        this.pendingStarredEmails = emails;
+        break;
+    }
+
+    // ✅ Notify only the specific folder
+    const subject = this.hasPendingUpdatesMap.get(folder);
+    if (subject) {
+      subject.next(true);
+    }
+  }
+
+// ADD method to get pending emails:
+  private getPendingEmails(folder: string): Email[] {
+    switch (folder) {
+      case 'inbox':
+        return this.pendingInboxEmails;
+      case 'sent':
+        return this.pendingSentEmails;
+      case 'draft':
+        return this.pendingDraftEmails;
+      case 'trash':
+        return this.pendingTrashEmails;
+      case 'starred':
+        return this.pendingStarredEmails;
+      default:
+        return [];
+    }
+  }
+
+  applyPendingEmails(folder: string): void {
+    const pendingEmails = this.getPendingEmails(folder);
+
+    if (pendingEmails.length > 0) {
+      console.log(`✅ Applying ${pendingEmails.length} pending emails to ${folder}`);
+
+      const subject = this.getSubjectByFolder(folder);
+      subject.next(pendingEmails);
+
+      // Clear pending
+      this.storePendingEmails(folder, []);
+
+      // ✅ Clear notification for this specific folder
+      const pendingSubject = this.hasPendingUpdatesMap.get(folder);
+      if (pendingSubject) {
+        pendingSubject.next(false);
+      }
+    }
+  }
+  /**
+   * Stop polling
+   */
+  stopPolling(): void {
+    if (this.pollingSubscription) {
+      console.log('🛑 Stopping polling');
+      this.pollingSubscription.unsubscribe();
+      this.pollingSubscription = undefined;
+    }
+  }
+
+  /**
+   * Fetch emails immediately (for manual refresh)
+   */
+  fetchEmails(folder: string, sort: string = 'date-desc', filters?: any): void {
+    this.refreshFolder(folder, sort, filters).subscribe({
+      next: (emails) => {
+        console.log(`✅ Fetched ${emails.length} emails from ${folder}`);
+      },
+      error: (error) => {
+        console.error('❌ Error fetching emails:', error);
+      }
+    });
+  }
+
+  /**
+   * Manual refresh (triggers immediate fetch)
+   */
+  // UPDATE refreshNow method to apply pending emails:
+  refreshNow(folder: string, sort: string = 'date-desc', filters?: any): void {
+    console.log(`🔄 Manual refresh triggered for ${folder}`);
+
+    // Clear the notification immediately for this folder
+    const pendingSubject = this.hasPendingUpdatesMap.get(folder);
+    if (pendingSubject) {
+      pendingSubject.next(false);
+    }
+
+    // Apply any pending emails first
+    this.applyPendingEmails(folder);
+
+    // Then fetch fresh data
+    this.fetchEmails(folder, sort, filters);
   }
 }

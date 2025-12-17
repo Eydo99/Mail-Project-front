@@ -1,12 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
 import { Email } from '../../core/models/email.model';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { SortCriteria } from '../../core/models/SortCriteria';
-import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
+import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X,RefreshCw } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
 import { FilterModalComponent } from "../../components/filter-modal/filter-modal.component";
 import { FolderData } from "../../components/folder-modal/folder-modal.component";
@@ -19,7 +20,7 @@ import { FolderService } from "../../core/services/folder.service";
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.css']
 })
-export class InboxListComponent implements OnInit {
+export class InboxListComponent implements OnInit ,OnDestroy{
   folderName: string = 'inbox';
   title: string = 'Inbox';
 
@@ -37,6 +38,7 @@ export class InboxListComponent implements OnInit {
   readonly Trash2 = Trash2;
   readonly FolderInput = FolderInput;
   readonly X = X;
+  readonly RefreshCw = RefreshCw;
 
   // Email data (now comes directly from backend, already filtered/sorted)
   allEmails: Email[] = [];
@@ -49,6 +51,10 @@ export class InboxListComponent implements OnInit {
   filterCriteria: FilterCriteria = {};
   hasActiveFilters: boolean = false;
   showFilterModal: boolean = false;
+  private emailSubscription?: Subscription;
+  isRefreshing: boolean = false
+  hasNewEmails: boolean = false;
+  private newEmailSubscription?: Subscription
 
   // Selection for action bar
   selectedEmails: Set<string> = new Set();
@@ -64,12 +70,42 @@ export class InboxListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadEmails();
     this.loadFolders();
 
+    // Subscribe to pending emails notification
+    // Subscribe to pending emails notification for THIS folder
+    this.mailService.getPendingUpdates$(this.folderName).subscribe(hasPending => {
+      console.log(`🔔 Pending updates for ${this.folderName}:`, hasPending);
+      this.hasNewEmails = hasPending;
+    });
+
+    // Subscribe to email updates (displayed emails only)
+    this.emailSubscription = this.mailService.emails$.subscribe(emails => {
+      console.log(`📧 Displaying ${emails.length} emails`);
+      this.allEmails = emails;
+      this.filteredEmails = emails;
+      this.totalItems = emails.length;
+      this.updatePagination();
+    });
+
+    // Start auto-refresh polling
+    this.startAutoRefresh();
+
+    // Listen for selected email changes
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
+  }
+
+  // ADD THIS NEW METHOD RIGHT AFTER ngOnInit (after line 70):
+  ngOnDestroy(): void {
+    if (this.emailSubscription) {
+      this.emailSubscription.unsubscribe();
+    }
+    if (this.newEmailSubscription) {
+      this.newEmailSubscription.unsubscribe();
+    }
+    this.mailService.stopPolling();
   }
 
   loadFolders(): void {
@@ -78,22 +114,37 @@ export class InboxListComponent implements OnInit {
     });
   }
 
+  // ADD THIS NEW METHOD AFTER loadFolders() (around line 75):
+  startAutoRefresh(): void {
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.startPolling(this.folderName, sortString, backendFilters);
+  }
+
   /**
    * Load emails - NOW USES BACKEND FILTERING AND SORTING
    */
   loadEmails(): void {
     const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
-
-    // Build filter object for backend
     const backendFilters = this.buildBackendFilters();
 
-    this.mailService.refreshFolder(this.folderName, sortString, backendFilters).subscribe(emails => {
-      // Backend already filtered and sorted - just use the results
-      this.allEmails = emails;
-      this.filteredEmails = emails;
-      this.totalItems = emails.length;
-      this.updatePagination();
-    });
+    // Restart polling with new parameters
+    this.mailService.startPolling(this.folderName, sortString, backendFilters);
+  }
+
+  refreshEmails(): void {
+    this.isRefreshing = true;
+    this.hasNewEmails = false; // Clear notification when user clicks refresh
+
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.refreshNow(this.folderName, sortString, backendFilters);
+
+    setTimeout(() => {
+      this.isRefreshing = false;
+    }, 500);
   }
 
   /**
@@ -102,8 +153,10 @@ export class InboxListComponent implements OnInit {
   private buildBackendFilters(): any {
     const filters: any = {};
 
-    if (this.searchQuery && this.searchQuery.trim()) {
-      filters.searchTerm = this.searchQuery.trim();
+    // ✅ FIX: Check BOTH searchQuery (from toolbar) AND filterCriteria.searchTerm (from modal)
+    const searchText = this.searchQuery || this.filterCriteria.searchTerm;
+    if (searchText && searchText.trim()) {
+      filters.searchTerm = searchText.trim();
     }
 
     if (this.filterCriteria.dateFrom) {
@@ -141,7 +194,7 @@ export class InboxListComponent implements OnInit {
     // Check if any filters are active
     this.hasActiveFilters = Object.keys(filters).length > 0;
 
-    return Object.keys(filters).length > 0 ? filters : undefined;
+    return filters;
   }
 
   /**
@@ -176,25 +229,25 @@ export class InboxListComponent implements OnInit {
     this.showFilterModal = false;
   }
 
-  /**
-   * Apply filters from modal
-   */
   onApplyFilters(criteria: FilterCriteria): void {
+    console.log('📋 Applying filters:', criteria);
     this.filterCriteria = criteria;
-    this.currentPage = 1;
-    this.loadEmails(); // Reload from backend with new filters
-  }
 
-  /**
-   * Clear all filters
-   */
+    // ✅ FIX: Sync the toolbar search input with the filter modal search
+    if (criteria.searchTerm) {
+      this.searchQuery = criteria.searchTerm;
+    }
+
+    this.currentPage = 1;
+    this.loadEmails();
+  }
   clearAllFilters(): void {
+    console.log('🗑️ Clearing all filters');
     this.filterCriteria = {};
-    this.searchQuery = '';
+    this.searchQuery = ''; // ✅ Clear toolbar search too
     this.currentPage = 1;
-    this.loadEmails(); // Reload from backend without filters
+    this.loadEmails();
   }
-
   /**
    * Email click handler
    */

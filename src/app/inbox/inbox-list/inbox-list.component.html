@@ -60,6 +60,22 @@
         (input)="onSearch(searchQuery)"
       />
 
+      <button
+        class="refresh-btn"
+        [class.has-new-emails]="hasNewEmails"
+        (click)="refreshEmails()"
+        [disabled]="isRefreshing"
+        [title]="hasNewEmails ? 'New emails available!' : 'Refresh inbox'"
+      >
+        <lucide-icon
+          [img]="RefreshCw"
+          class="refresh-icon"
+          [class.spinning]="isRefreshing"
+        ></lucide-icon>
+        <span class="refresh-text">Refresh</span>
+        <span *ngIf="hasNewEmails" class="new-badge"></span>
+      </button>
+
       <select class="sort-dropdown" (change)="onSortChange($any($event.target).value)">
         <option value="date-desc">Date (Newest)</option>
         <option value="date-asc">Date (Oldest)</option>

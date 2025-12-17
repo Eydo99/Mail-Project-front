@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MailService } from '../../core/services/mail.service';
@@ -6,11 +6,12 @@ import { EmailStateService } from '../../core/services/email-state.service';
 import { Email } from '../../core/models/email.model';
 import { FilterCriteria } from '../../core/models/FilterCriteria';
 import { SortCriteria } from '../../core/models/SortCriteria';
-import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X } from 'lucide-angular';
+import { LucideAngularModule, Star, Paperclip, AlertCircle, Filter, Trash2, FolderInput, X ,RefreshCw } from 'lucide-angular';
 import { PaginationComponent } from "../../components/pagination/pagination.component";
 import { FilterModalComponent } from '../../components/filter-modal/filter-modal.component';
 import {FolderData} from "../../components/folder-modal/folder-modal.component";
 import {FolderService} from "../../core/services/folder.service";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sent-list',
@@ -19,7 +20,7 @@ import {FolderService} from "../../core/services/folder.service";
   templateUrl: './sent-list.component.html',
   styleUrl: './sent-list.component.css'
 })
-export class SentListComponent implements OnInit {
+export class SentListComponent implements OnInit,OnDestroy {
   // Folder configuration - CHANGE THIS
   folderName: string = 'sent';
   title: string = 'Sent';
@@ -38,6 +39,7 @@ export class SentListComponent implements OnInit {
   readonly Trash2 = Trash2;
   readonly FolderInput = FolderInput;
   readonly X = X;
+  readonly RefreshCw = RefreshCw;
 
  // Email data
   allEmails: Email[] = [];
@@ -50,6 +52,10 @@ export class SentListComponent implements OnInit {
   filterCriteria: FilterCriteria = {};
   hasActiveFilters: boolean = false;
   showFilterModal: boolean = false;
+  private emailSubscription?: Subscription;
+  private newEmailSubscription?: Subscription;
+  isRefreshing: boolean = false;
+  hasNewEmails: boolean = false;
 
   // Selection properties for action bar
   selectedEmails: Set<string> = new Set();
@@ -67,12 +73,40 @@ export class SentListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadEmails();
-    this.loadFolders(); //
-    // Track which email is selected
+    this.loadFolders();
+
+    // Subscribe to pending emails notification for THIS folder
+    this.newEmailSubscription = this.mailService.getPendingUpdates$(this.folderName).subscribe(hasPending => {
+      console.log(`🔔 Pending updates for ${this.folderName}:`, hasPending);
+      this.hasNewEmails = hasPending;
+    });
+
+    // Subscribe to SENT emails specifically
+    this.emailSubscription = this.mailService.sentEmails$.subscribe(emails => {
+      console.log(`📧 Displaying ${emails.length} sent emails`);
+      this.allEmails = emails;
+      this.filteredEmails = emails;
+      this.totalItems = emails.length;
+      this.updatePagination();
+    });
+
+    // Start auto-refresh polling
+    this.startAutoRefresh();
+
+    // Listen for selected email changes
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.emailSubscription) {
+      this.emailSubscription.unsubscribe();
+    }
+    if (this.newEmailSubscription) {
+      this.newEmailSubscription.unsubscribe();
+    }
+    this.mailService.stopPolling();
   }
   ///
   loadFolders(): void {
@@ -81,23 +115,23 @@ export class SentListComponent implements OnInit {
     });
   }
 ///
+
+  startAutoRefresh(): void {
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.startPolling(this.folderName, sortString, backendFilters);
+  }
   /**
    * Load emails - NOW USES BACKEND FILTERING AND SORTING
    */
   loadEmails(): void {
     const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
-
-    // Build filter object for backend
     const backendFilters = this.buildBackendFilters();
 
-    this.mailService.refreshFolder(this.folderName, sortString, backendFilters).subscribe(emails => {
-      // Backend already filtered and sorted - just use the results
-      this.allEmails = emails;
-      this.filteredEmails = emails;
-      this.totalItems = emails.length;
-      this.updatePagination();
-    });
+    this.mailService.startPolling(this.folderName, sortString, backendFilters);
   }
+
 
   /**
    * Convert frontend FilterCriteria to backend format
@@ -105,8 +139,10 @@ export class SentListComponent implements OnInit {
   private buildBackendFilters(): any {
     const filters: any = {};
 
-    if (this.searchQuery && this.searchQuery.trim()) {
-      filters.searchTerm = this.searchQuery.trim();
+    // ✅ FIX: Check BOTH searchQuery (from toolbar) AND filterCriteria.searchTerm (from modal)
+    const searchText = this.searchQuery || this.filterCriteria.searchTerm;
+    if (searchText && searchText.trim()) {
+      filters.searchTerm = searchText.trim();
     }
 
     if (this.filterCriteria.dateFrom) {
@@ -144,7 +180,7 @@ export class SentListComponent implements OnInit {
     // Check if any filters are active
     this.hasActiveFilters = Object.keys(filters).length > 0;
 
-    return Object.keys(filters).length > 0 ? filters : undefined;
+    return filters;
   }
 
   /**
@@ -182,9 +218,16 @@ export class SentListComponent implements OnInit {
    * Apply filters from modal
    */
   onApplyFilters(criteria: FilterCriteria): void {
+    console.log('📋 Applying filters:', criteria);
     this.filterCriteria = criteria;
+
+    // ✅ FIX: Sync the toolbar search input with the filter modal search
+    if (criteria.searchTerm) {
+      this.searchQuery = criteria.searchTerm;
+    }
+
     this.currentPage = 1;
-    this.loadEmails(); // Reload from backend with new filters
+    this.loadEmails();
   }
 
   /**

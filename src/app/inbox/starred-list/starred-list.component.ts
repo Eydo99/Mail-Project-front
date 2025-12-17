@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { LucideAngularModule, Star, Paperclip, Filter, Trash2, FolderInput, X } from 'lucide-angular';
+import { LucideAngularModule, Star, Paperclip, Filter, Trash2, FolderInput, X,RefreshCw } from 'lucide-angular';
 import { MailService } from '../../core/services/mail.service';
 import { EmailStateService } from '../../core/services/email-state.service';
 import { Email } from '../../core/models/email.model';
@@ -14,6 +14,7 @@ import { PaginationComponent } from "../../components/pagination/pagination.comp
 import { FilterModalComponent } from "../../components/filter-modal/filter-modal.component";
 import { FolderData } from "../../components/folder-modal/folder-modal.component";
 import { FolderService } from "../../core/services/folder.service";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-starred-list',
@@ -40,11 +41,13 @@ export class StarredListComponent implements OnInit, OnDestroy {
   readonly Trash2 = Trash2;
   readonly FolderInput = FolderInput;
   readonly X = X;
+  readonly RefreshCw = RefreshCw;
 
   // Email data (comes from backend, already filtered and sorted)
   allEmails: Email[] = [];
   filteredEmails: Email[] = [];
   selectedEmailId: string | null = null;
+
 
   // Search, Sort, Filter
   searchQuery: string = '';
@@ -52,6 +55,10 @@ export class StarredListComponent implements OnInit, OnDestroy {
   filterCriteria: FilterCriteria = {};
   hasActiveFilters: boolean = false;
   showFilterModal: boolean = false;
+  private emailSubscription?: Subscription;
+  private newEmailSubscription?: Subscription;
+  isRefreshing: boolean = false;
+  hasNewEmails: boolean = false;
 
   // Selection for action bar
   selectedEmails: Set<string> = new Set();
@@ -70,8 +77,25 @@ export class StarredListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadEmails();
     this.loadFolders();
+
+    // Subscribe to pending emails notification for THIS folder
+    this.newEmailSubscription = this.mailService.getPendingUpdates$(this.folderName).subscribe(hasPending => {
+      console.log(`🔔 Pending updates for ${this.folderName}:`, hasPending);
+      this.hasNewEmails = hasPending;
+    });
+
+    // Subscribe to STARRED emails specifically
+    this.emailSubscription = this.mailService.starredEmails$.subscribe(emails => {
+      console.log(`📧 Displaying ${emails.length} starred emails`);
+      this.allEmails = emails;
+      this.filteredEmails = emails;
+      this.totalItems = emails.length;
+      this.updatePagination();
+    });
+
+    // Start auto-refresh polling
+    this.startAutoRefresh();
 
     // Track selected email
     this.emailStateService.selectedEmail$
@@ -82,6 +106,14 @@ export class StarredListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.emailSubscription) {
+      this.emailSubscription.unsubscribe();
+    }
+    if (this.newEmailSubscription) {
+      this.newEmailSubscription.unsubscribe();
+    }
+    this.mailService.stopPolling();
+
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -94,40 +126,41 @@ export class StarredListComponent implements OnInit, OnDestroy {
       });
   }
 
+  startAutoRefresh(): void {
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.startPolling(this.folderName, sortString, backendFilters);
+  }
   /**
    * Load starred emails - Uses backend filtering and sorting via mailService.refreshFolder
    * The backend getStarredEmails() method applies filters and sorting before returning results
    */
+  /**
+   * Load starred emails - NOW USES BACKEND FILTERING AND SORTING with polling
+   */
   loadEmails(): void {
-    // Build sort string for backend (e.g., "date-desc", "subject-asc")
     const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
-
-    // Convert frontend filters to backend format
     const backendFilters = this.buildBackendFilters();
 
     console.log('🔄 Loading starred emails with:', { sortString, backendFilters });
 
-    // Call mailService.refreshFolder which hits the backend endpoint
-    // Backend applies filters and sorting via EmailFilterService and EmailSortContext
-    this.mailService.refreshFolder(this.folderName, sortString, backendFilters)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (emails) => {
-          // Backend already filtered and sorted - just use the results
-          this.allEmails = emails;
-          this.filteredEmails = emails;
-          this.totalItems = emails.length;
-          this.updatePagination();
-          console.log(`✅ Loaded ${emails.length} starred emails`);
-        },
-        error: (error) => {
-          console.error('❌ Error loading starred emails:', error);
-          this.allEmails = [];
-          this.filteredEmails = [];
-          this.totalItems = 0;
-          this.updatePagination();
-        }
-      });
+    // Restart polling with new parameters
+    this.mailService.startPolling(this.folderName, sortString, backendFilters);
+  }
+
+  refreshEmails(): void {
+    this.isRefreshing = true;
+    this.hasNewEmails = false; // Clear notification when user clicks refresh
+
+    const sortString = `${this.sortCriteria.field}-${this.sortCriteria.direction}`;
+    const backendFilters = this.buildBackendFilters();
+
+    this.mailService.refreshNow(this.folderName, sortString, backendFilters);
+
+    setTimeout(() => {
+      this.isRefreshing = false;
+    }, 500);
   }
 
   /**
@@ -136,12 +169,12 @@ export class StarredListComponent implements OnInit, OnDestroy {
   private buildBackendFilters(): any {
     const filters: any = {};
 
-    // Search term (searches across subject, body, sender)
-    if (this.searchQuery && this.searchQuery.trim()) {
-      filters.searchTerm = this.searchQuery.trim();
+    // ✅ FIX: Check BOTH searchQuery (from toolbar) AND filterCriteria.searchTerm (from modal)
+    const searchText = this.searchQuery || this.filterCriteria.searchTerm;
+    if (searchText && searchText.trim()) {
+      filters.searchTerm = searchText.trim();
     }
 
-    // Date range filters
     if (this.filterCriteria.dateFrom) {
       filters.dateFrom = this.filterCriteria.dateFrom;
     }
@@ -150,36 +183,34 @@ export class StarredListComponent implements OnInit, OnDestroy {
       filters.dateTo = this.filterCriteria.dateTo;
     }
 
-    // Sender filter
     if (this.filterCriteria.sender) {
       filters.sender = this.filterCriteria.sender;
     }
 
-    // Priority filter (array of priority levels)
     if (this.filterCriteria.priority && this.filterCriteria.priority.length > 0) {
       filters.priority = this.filterCriteria.priority;
     }
 
-    // Attachment filter
     if (this.filterCriteria.hasAttachment !== undefined) {
       filters.hasAttachment = this.filterCriteria.hasAttachment;
     }
 
-    // Subject contains
+    if (this.filterCriteria.isStarred !== undefined) {
+      filters.isStarred = this.filterCriteria.isStarred;
+    }
+
     if (this.filterCriteria.subjectContains) {
       filters.subjectContains = this.filterCriteria.subjectContains;
     }
 
-    // Body contains
     if (this.filterCriteria.bodyContains) {
       filters.bodyContains = this.filterCriteria.bodyContains;
     }
 
-    // Update UI flag for active filters
+    // Check if any filters are active
     this.hasActiveFilters = Object.keys(filters).length > 0;
 
-    // Return undefined if no filters to avoid sending empty object
-    return Object.keys(filters).length > 0 ? filters : undefined;
+    return filters;
   }
 
   /**
@@ -221,8 +252,14 @@ export class StarredListComponent implements OnInit, OnDestroy {
   onApplyFilters(criteria: FilterCriteria): void {
     console.log('📋 Applying filters:', criteria);
     this.filterCriteria = criteria;
-    this.currentPage = 1; // Reset to first page on filter change
-    this.loadEmails(); // Backend handles filtering via EmailFilterService
+
+    // ✅ FIX: Sync the toolbar search input with the filter modal search
+    if (criteria.searchTerm) {
+      this.searchQuery = criteria.searchTerm;
+    }
+
+    this.currentPage = 1;
+    this.loadEmails();
   }
 
   /**

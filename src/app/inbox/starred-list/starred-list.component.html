@@ -60,6 +60,7 @@
         (input)="onSearch(searchQuery)"
       />
 
+
       <select class="sort-dropdown" (change)="onSortChange($any($event.target).value)">
         <option value="date-desc">Date (Newest)</option>
         <option value="date-asc">Date (Oldest)</option>
@@ -67,8 +68,8 @@
         <option value="sender-desc">Sender (Z-A)</option>
         <option value="subject-asc">Subject (A-Z)</option>
         <option value="subject-desc">Subject (Z-A)</option>
-        <option value="priority-asc">Priority (Low to High)</option>
-        <option value="priority-desc">Priority (High to Low)</option>
+        <option value="priority-asc">Priority (High to Low)</option>
+        <option value="priority-desc">Priority (Low to High)</option>
       </select>
 
       <button
@@ -132,6 +133,7 @@
               stroke-linejoin="round"
             />
           </svg>
+
 
           <!-- Attachment Icon -->
           <lucide-icon
