@@ -44,7 +44,7 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
   });
   this.composeOpenSubject.next(true);
 }
- 
+
 
   openReply(senderEmail: string, subject: string, body: string): void {
   this.composeDataSubject.next({

@@ -29,7 +29,7 @@ export class ContactService {
   ): Observable<PaginatedContactResponse> {
 
     let params = new HttpParams()
-      .set('page', (page - 1).toString())
+      .set('page', (page).toString())
       .set('size', size.toString())
       .set('sortBy', sortBy);
 

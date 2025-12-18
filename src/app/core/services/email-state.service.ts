@@ -20,7 +20,7 @@ export class EmailStateService {
     this.selectedEmailSubject.next(email);
     this.readerOpenSubject.next(true);
     this.currentEmailListSubject.next(emailList);
-    
+
     // Find the index of the selected email in the list
     const index = emailList.findIndex(e => e.id === email.id);
     this.currentIndexSubject.next(index);
@@ -29,7 +29,7 @@ export class EmailStateService {
   navigateToNext(): void {
     const currentList = this.currentEmailListSubject.value;
     const currentIndex = this.currentIndexSubject.value;
-    
+
     if (currentIndex < currentList.length - 1) {
       const nextIndex = currentIndex + 1;
       this.currentIndexSubject.next(nextIndex);
@@ -40,7 +40,7 @@ export class EmailStateService {
   navigateToPrevious(): void {
     const currentIndex = this.currentIndexSubject.value;
     const currentList = this.currentEmailListSubject.value;
-    
+
     if (currentIndex > 0) {
       const prevIndex = currentIndex - 1;
       this.currentIndexSubject.next(prevIndex);

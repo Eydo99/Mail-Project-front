@@ -21,20 +21,7 @@
           Delete
         </button>
 
-        <select class="folder-dropdown" [(ngModel)]="moveToFolder" (change)="onFolderChange(moveToFolder)">
-          <option value="" disabled selected>Choose folder...</option>
-          <option value="inbox">Inbox</option>
-          <option value="sent">Sent</option>
-          <option value="draft">Draft</option>
-          <div *ngFor="let folder of folders">
-            <option [value]="'folder_' + folder.id">{{folder.name}}</option>
-          </div>
-        </select>
 
-        <button class="action-btn move-btn" (click)="moveSelectedEmails()" [disabled]="!moveToFolder">
-          <lucide-icon [img]="FolderInput" class="action-icon"></lucide-icon>
-          Move
-        </button>
       </div>
 
       <button class="action-bar-close" (click)="closeActionBar()">

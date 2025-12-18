@@ -27,7 +27,7 @@ export class ReaderComponent implements OnInit {
   private mailService: MailService,
   private composeService: ComposeService,
   private router :Router
-  
+
   ) {}
 
   ngOnInit(): void {
@@ -100,8 +100,8 @@ onSendDraft(): void {
       3: 'normal',
       4: 'low'
     };
-    
-    const priorityString = this.selectedEmail.priority 
+
+    const priorityString = this.selectedEmail.priority
       ? priorityMap[this.selectedEmail.priority] || 'normal'
       : 'normal';
 
@@ -122,8 +122,8 @@ onEditDraft(): void {
       3: 'normal',
       4: 'low'
     };
-    
-    const priorityString = this.selectedEmail.priority 
+
+    const priorityString = this.selectedEmail.priority
       ? priorityMap[this.selectedEmail.priority] || 'normal'
       : 'normal';
 

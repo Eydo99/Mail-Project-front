@@ -13,7 +13,7 @@
 
   <!-- Folders Grid -->
   <div class="folders-grid">
-    <div 
+    <div
       *ngFor="let folder of folders"
       class="folder-card"
       [style.border-color]="folder.color"
@@ -24,15 +24,15 @@
           <lucide-icon [img]="FolderIcon" class="folder-icon"></lucide-icon>
         </div>
         <div class="folder-actions">
-          <button 
-            class="action-btn edit-btn" 
+          <button
+            class="action-btn edit-btn"
             (click)="editFolder($event, folder)"
             title="Edit folder"
           >
             <lucide-icon [img]="Edit" class="action-icon"></lucide-icon>
           </button>
-          <button 
-            class="action-btn delete-btn" 
+          <button
+            class="action-btn delete-btn"
             (click)="deleteFolder($event, folder)"
             title="Delete folder"
           >
@@ -69,18 +69,7 @@
     </div>
   </div>
 
-  <!-- Folder Tips -->
-  <div class="folder-tips" *ngIf="folders.length > 0">
-    <div class="tips-icon">💡</div>
-    <div class="tips-content">
-      <h4 class="tips-title">Folder Tips</h4>
-      <ul class="tips-list">
-        <li>Drag and drop emails into folders to organize them</li>
-        <li>Set up automatic rules to sort incoming emails</li>
-        <li>Use colors to visually distinguish between folder types</li>
-      </ul>
-    </div>
-  </div>
+
 
   <!-- Folder Modal -->
   <app-folder-modal
