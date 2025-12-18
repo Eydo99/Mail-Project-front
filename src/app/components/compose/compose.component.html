@@ -58,13 +58,13 @@
 <div class="form-group">
   <label>Attachments:</label>
   <div class="attachment-section">
-    
+
     <!-- Existing Attachments (from draft) -->
     <div class="attachments-list" *ngIf="existingAttachments.length > 0">
       <div class="attachment-item" *ngFor="let attachment of existingAttachments; let i = index" style="background: #e8f5e9;">
         <span class="attachment-name">📎 {{ attachment.filename }}</span>
         <span class="attachment-size">({{ (attachment.fileSize / 1024).toFixed(1) }} KB)</span>
-        <button type="button" class="btn-remove" (click)="removeExistingAttachment(i)" 
+        <button type="button" class="btn-remove" (click)="removeExistingAttachment(i)"
                 [disabled]="isForwardMode || isDraftMode"
                 aria-label="Remove attachment">
           ✕
@@ -74,11 +74,11 @@
 
     <!-- New Attachments -->
     <input type="file" id="file-input" (change)="onFileSelect($event)" multiple style="display: none;">
-    <button type="button" class="btn-attach" [disabled]="isForwardMode || isDraftMode" (click)="fileInput.click()"
-      #fileInput onclick="document.getElementById('file-input').click()">
+    <button type="button" class="btn-attach"
+            [disabled]="isForwardMode || isDraftMode"
+            onclick="document.getElementById('file-input').click()">
       📎 Add Attachments
     </button>
-
     <!-- Show newly selected files -->
     <div class="attachments-list" *ngIf="attachments.length > 0">
       <div class="attachment-item" *ngFor="let file of attachments; let i = index">
