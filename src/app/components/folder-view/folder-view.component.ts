@@ -1,5 +1,5 @@
-// folder-view.component.ts - Modified for backend
-import { Component, OnInit } from '@angular/core';
+
+import { Component, OnInit,OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -21,7 +21,7 @@ import {FilterModalComponent} from "../filter-modal/filter-modal.component";
   templateUrl: './folder-view.component.html',
   styleUrls: ['./folder-view.component.css']
 })
-export class FolderViewComponent implements OnInit {
+export class FolderViewComponent implements OnInit ,OnDestroy{
   folderId: string = '';
   folderName: string = '';
   title: string = '';
@@ -60,7 +60,7 @@ export class FolderViewComponent implements OnInit {
   selectedEmails: Set<string> = new Set();
   showActionBar: boolean = false;
   moveToFolder: string = '';
-
+  isAutoRefreshing = false;
 
   ///
   folders: FolderData[] = [];
@@ -90,6 +90,10 @@ export class FolderViewComponent implements OnInit {
     this.folderService.getAllFolders().subscribe(folders => {
       this.folders = folders;
     });
+    this.isAutoRefreshing = true;
+  }
+  ngOnDestroy(): void {
+    this.isAutoRefreshing = false;
   }
   /**
    * Load folder metadata from backend using FolderService

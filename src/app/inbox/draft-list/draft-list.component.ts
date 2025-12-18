@@ -59,11 +59,13 @@ export class DraftListComponent implements OnInit ,OnDestroy{
   private emailSubscription?: Subscription;
   isRefreshing: boolean = false;
   hasNewEmails: boolean = false;
+  isAutoRefreshing: boolean = false;
 
   // Selection properties for action bar
   selectedEmails: Set<string> = new Set();
   showActionBar: boolean = false;
   moveToFolder: string = '';
+
 
  ///
   folders: FolderData[] = [];
@@ -76,6 +78,7 @@ export class DraftListComponent implements OnInit ,OnDestroy{
 
   ngOnInit(): void {
     this.loadFolders();
+
 
 // Subscribe to pending emails notification for THIS folder
     this.mailService.getPendingUpdates$(this.folderName).subscribe(hasPending => {
@@ -94,6 +97,7 @@ export class DraftListComponent implements OnInit ,OnDestroy{
 
     // Start auto-refresh polling
     this.startAutoRefresh();
+    this.isAutoRefreshing = true;
 
     // Listen for selected email changes
     this.emailStateService.selectedEmail$.subscribe(email => {
@@ -106,6 +110,7 @@ export class DraftListComponent implements OnInit ,OnDestroy{
       this.emailSubscription.unsubscribe();
     }
     this.mailService.stopPolling();
+    this.isAutoRefreshing = false;
   }
  ///
   loadFolders(): void {

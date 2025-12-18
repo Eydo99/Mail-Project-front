@@ -32,7 +32,10 @@
 
   <!-- Header -->
   <div class="inbox-header">
-    <h1 class="inbox-title">{{ title }}</h1>
+    <h1 class="inbox-title">
+      {{ title }}
+      <span class="auto-refresh-indicator" *ngIf="isAutoRefreshing">● Auto-updating</span>
+    </h1>
 
     <div class="inbox-toolbar">
       <button class="select-all-btn" (click)="toggleSelectAll()">

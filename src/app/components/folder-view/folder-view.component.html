@@ -24,6 +24,7 @@
 
         <select class="folder-dropdown" [(ngModel)]="moveToFolder" (change)="onFolderChange(moveToFolder)">
           <option value="" disabled selected>Choose folder...</option>
+
           <div *ngFor="let folder of folders">
             <option [value]="'folder_' + folder.id" *ngIf="title !== folder.name" >{{folder.name}}</option>
           </div>
@@ -47,7 +48,10 @@
       <button class="back-btn" (click)="goBack()">
         <lucide-icon [img]="ArrowLeft" class="back-icon"></lucide-icon>
       </button>
-      <h1 class="inbox-title" [style.color]="folderColor">{{ title }}</h1>
+      <h1 class="inbox-title" [style.color]="folderColor">
+        {{ title }}
+        <span class="auto-refresh-indicator" *ngIf="isAutoRefreshing">● Auto-updating</span>
+      </h1>
     </div>
 
     <p class="folder-description" *ngIf="folderDescription">{{ folderDescription }}</p>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MailService } from '../../core/services/mail.service';
@@ -22,7 +22,7 @@ interface PrioritySection {
   templateUrl: './priority-inbox.component.html',
   styleUrl: './priority-inbox.component.css'
 })
-export class PriorityInboxComponent implements OnInit {
+export class PriorityInboxComponent implements OnInit,OnDestroy {
   // Folder configuration
   folderName: string = 'inbox';
   title: string = 'Priority Inbox';
@@ -36,6 +36,7 @@ export class PriorityInboxComponent implements OnInit {
 
   allEmails: Email[] = [];
   selectedEmailId: string | null = null;
+  isAutoRefreshing = false;
 
   // Priority sections
   prioritySections: PrioritySection[] = [
@@ -52,11 +53,15 @@ export class PriorityInboxComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadEmails();
+    this.isAutoRefreshing = true;
 
     // Track which email is selected
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
     });
+  }
+  ngOnDestroy(): void {
+    this.isAutoRefreshing = false;
   }
 
   /**

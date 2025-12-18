@@ -3,7 +3,10 @@
   <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Custom Folders</h1>
-      <p class="page-subtitle">Organize your emails with custom folders</p>
+      <p class="page-subtitle">
+        Organize your emails with custom folders
+        <span class="auto-refresh-indicator">● Auto-updating</span>
+      </p>
     </div>
     <button class="new-folder-btn" (click)="openCreateFolder()">
       <lucide-icon [img]="Plus" class="btn-icon"></lucide-icon>
@@ -68,8 +71,6 @@
       </button>
     </div>
   </div>
-
-
 
   <!-- Folder Modal -->
   <app-folder-modal

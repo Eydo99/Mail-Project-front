@@ -56,6 +56,7 @@ export class SentListComponent implements OnInit,OnDestroy {
   private newEmailSubscription?: Subscription;
   isRefreshing: boolean = false;
   hasNewEmails: boolean = false;
+  isAutoRefreshing: boolean = false;
 
   // Selection properties for action bar
   selectedEmails: Set<string> = new Set();
@@ -92,6 +93,7 @@ export class SentListComponent implements OnInit,OnDestroy {
 
     // Start auto-refresh polling
     this.startAutoRefresh();
+    this.isAutoRefreshing = true;
 
     // Listen for selected email changes
     this.emailStateService.selectedEmail$.subscribe(email => {
@@ -107,6 +109,7 @@ export class SentListComponent implements OnInit,OnDestroy {
       this.newEmailSubscription.unsubscribe();
     }
     this.mailService.stopPolling();
+    this.isAutoRefreshing = false;
   }
   ///
   loadFolders(): void {

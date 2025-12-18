@@ -59,7 +59,7 @@ export class StarredListComponent implements OnInit, OnDestroy {
   private newEmailSubscription?: Subscription;
   isRefreshing: boolean = false;
   hasNewEmails: boolean = false;
-
+  isAutoRefreshing = false;
   // Selection for action bar
   selectedEmails: Set<string> = new Set();
   showActionBar: boolean = false;
@@ -96,6 +96,7 @@ export class StarredListComponent implements OnInit, OnDestroy {
 
     // Start auto-refresh polling
     this.startAutoRefresh();
+    this.isAutoRefreshing = true;
 
     // Track selected email
     this.emailStateService.selectedEmail$
@@ -113,6 +114,7 @@ export class StarredListComponent implements OnInit, OnDestroy {
       this.newEmailSubscription.unsubscribe();
     }
     this.mailService.stopPolling();
+    this.isAutoRefreshing = false;
 
     this.destroy$.next();
     this.destroy$.complete();

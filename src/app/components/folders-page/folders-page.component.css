@@ -356,3 +356,69 @@ lucide-icon {
   width: 100%;
   height: 100%;
 }
+
+
+/* Auto-refresh indicator */
+.auto-refresh-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 500;
+  animation: pulse-text 2s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Updated subtitle to support inline indicator */
+.page-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Email count with animation on change */
+.email-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.email-count span {
+  transition: all 0.3s ease;
+}
+
+/* Pulse animation for folder card when count updates */
+@keyframes folder-update {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.folder-card.updating {
+  animation: folder-update 0.5s ease;
+}

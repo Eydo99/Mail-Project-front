@@ -724,3 +724,22 @@
 .refresh-btn.has-new-emails:hover:not(:disabled) .refresh-icon {
   stroke: white;
 }
+
+.inbox-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.auto-refresh-indicator {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 500;
+  animation: pulse-indicator 2s ease-in-out infinite;
+}
+
+@keyframes pulse-indicator {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

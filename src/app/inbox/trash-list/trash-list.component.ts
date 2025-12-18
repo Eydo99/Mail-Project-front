@@ -21,7 +21,7 @@ import {FolderService} from "../../core/services/folder.service";
   templateUrl: './trash-list.component.html',
   styleUrl: './trash-list.component.css'
 })
-export class TrashListComponent implements OnInit {
+export class TrashListComponent implements OnInit,OnDestroy {
   // Folder configuration
   folderName: string = 'trash';
   title: string = 'Trash';
@@ -53,6 +53,7 @@ export class TrashListComponent implements OnInit {
   filterCriteria: FilterCriteria = {};
   hasActiveFilters: boolean = false;
   showFilterModal: boolean = false;
+  isAutoRefreshing = false;
 
   // Selection properties for action bar
   selectedEmails: Set<string> = new Set();
@@ -73,7 +74,12 @@ export class TrashListComponent implements OnInit {
     // Track which email is selected
     this.emailStateService.selectedEmail$.subscribe(email => {
       this.selectedEmailId = email?.id || null;
+      this.isAutoRefreshing = true;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.isAutoRefreshing = false;
   }
   ///
   loadFolders(): void {
@@ -85,6 +91,7 @@ export class TrashListComponent implements OnInit {
   onEmailClick(email: Email): void {
     this.mailService.markAsRead(email.id);
     this.emailStateService.selectEmail(email,this.filteredEmails);
+
   }
 
   /**
