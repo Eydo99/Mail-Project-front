@@ -59,7 +59,7 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
   this.composeOpenSubject.next(true);
 }
 
-  openForward(subject: string, body: string): void {
+  openForward(subject: string, body: string, attachments?: any[]): void {
   this.composeDataSubject.next({
     isReplyMode: false,
     isForwardMode: true,
@@ -67,7 +67,8 @@ private composeDataSubject = new BehaviorSubject<ComposeData>({
     isEditDraftMode: false,
     replyToEmail: '',
     originalSubject: subject,
-    originalBody: body
+    originalBody: body ,
+    originalAttachments: attachments // ✅ Add this line
   });
   this.composeOpenSubject.next(true);
 }

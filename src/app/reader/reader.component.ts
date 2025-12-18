@@ -88,7 +88,8 @@ onReply(): void {
   if (this.selectedEmail) {
     this.composeService.openForward(
       this.selectedEmail.subject,
-      this.selectedEmail.body
+      this.selectedEmail.body,
+      this.selectedEmail.attachments
     );
   }
 }
