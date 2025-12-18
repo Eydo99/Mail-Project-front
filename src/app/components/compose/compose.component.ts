@@ -53,7 +53,7 @@ export class ComposeComponent implements OnInit, OnDestroy {
         this.subject = data.originalSubject
           ? data.originalSubject
           : `Re: ${data.originalSubject}`;
-        this.body = `${data.originalBody}`;
+        this.body = ``;
         this.existingAttachments = [];
 
       } else if (data.isForwardMode) {
@@ -62,13 +62,14 @@ export class ComposeComponent implements OnInit, OnDestroy {
           ? data.originalSubject
           : `Fwd: ${data.originalSubject}`;
         this.body = `${data.originalBody}`;
-        this.existingAttachments = [];
+        this.existingAttachments = data.originalAttachments
+          ? JSON.parse(JSON.stringify(data.originalAttachments))
+          : [];
       } else if (data.isDraftMode) {
         this.to = '';
         this.subject = data.originalSubject;
         this.body = data.originalBody;
         this.priority = data.originalPriority || 'normal';
-        // Store existing attachments from draft
         // Store existing attachments from draft
         this.existingAttachments = data.originalAttachments
           ? JSON.parse(JSON.stringify(data.originalAttachments))
@@ -79,12 +80,10 @@ export class ComposeComponent implements OnInit, OnDestroy {
         this.body = data.originalBody;
         this.priority = data.originalPriority || 'normal';
         // Store existing attachments from draft
-        // Store existing attachments from draft
         this.existingAttachments = data.originalAttachments
           ? JSON.parse(JSON.stringify(data.originalAttachments))
           : [];
-      }
-      else {
+      } else {
         this.to = '';
         this.subject = '';
         this.body = '';
@@ -226,11 +225,11 @@ export class ComposeComponent implements OnInit, OnDestroy {
       'urgent': 1
     };
 
- const recipients = this.to.split(',').map(email => email.trim()).filter(email => email);
+    const recipients = this.to.split(',').map(email => email.trim()).filter(email => email);
 
-// NEW: Combine existing attachments with new ones for draft
-const newAttachmentDTOs = await this.convertAttachments();
-const allAttachments = [...this.existingAttachments, ...newAttachmentDTOs];
+    // NEW: Combine existing attachments with new ones for draft
+    const newAttachmentDTOs = await this.convertAttachments();
+    const allAttachments = [...this.existingAttachments, ...newAttachmentDTOs];
 
     const mailContent = {
       body: this.body,
@@ -292,9 +291,9 @@ const allAttachments = [...this.existingAttachments, ...newAttachmentDTOs];
     this.attachments.splice(index, 1);
   }
   // NEW: Remove existing attachment
-removeExistingAttachment(index: number): void {
-  this.existingAttachments.splice(index, 1);
-}
+  removeExistingAttachment(index: number): void {
+    this.existingAttachments.splice(index, 1);
+  }
 
   /**
    * Convert File to base64 string
