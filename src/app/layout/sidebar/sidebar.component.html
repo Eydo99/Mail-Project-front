@@ -14,7 +14,7 @@
         </div>
 
         <div class="brand-text">
-          <div class="brand-title">Dispatchr</div>
+          <div class="brand-title">Dispatcher</div>
         </div>
       </div>
     </header>
@@ -43,7 +43,7 @@
       <ul class="nav-list">
 
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'inbox'"
                   (click)="navigate('inbox')">
             <lucide-icon [img]="Inbox" class="nav-icon"></lucide-icon>
@@ -52,7 +52,7 @@
         </li>
 
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'priority'"
                   (click)="navigate('priority')">
             <lucide-icon [img]="Star" class="nav-icon"></lucide-icon>
@@ -61,7 +61,7 @@
         </li>
 
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'sent'"
                   (click)="navigate('sent')">
             <lucide-icon [img]="Send" class="nav-icon"></lucide-icon>
@@ -70,7 +70,7 @@
         </li>
 
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'drafts'"
                   (click)="navigate('drafts')">
             <lucide-icon [img]="FileText" class="nav-icon"></lucide-icon>
@@ -79,7 +79,7 @@
         </li>
 
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'trash'"
                   (click)="navigate('trash')">
             <lucide-icon [img]="Trash2" class="nav-icon"></lucide-icon>
@@ -88,14 +88,11 @@
         </li>
 
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'folders'"
                   (click)="navigate('folders')">
             <lucide-icon [img]="FolderOpen" class="nav-icon"></lucide-icon>
             <span class="label">Folders</span>
-            <span class="folder-badge" *ngIf="totalFolderCount > 0">
-              {{ totalFolderCount }}
-            </span>
           </button>
         </li>
 
@@ -105,17 +102,14 @@
     <!-- ================= STARRED EMAILS SECTION ================= -->
     <div class="folders-section">
       <div class="folders-label">Starred</div>
-      
+
       <ul class="nav-list">
         <li>
-          <button class="nav-btn" 
+          <button class="nav-btn"
                   [class.nav-btn--active]="currentRoute === 'starred'"
                   (click)="navigate('starred')">
             <lucide-icon [img]="StarIcon" class="nav-icon"></lucide-icon>
             <span class="label">Starred</span>
-            <span class="folder-badge" *ngIf="starredCount > 0">
-              {{ starredCount }}
-            </span>
           </button>
         </li>
       </ul>
@@ -125,36 +119,36 @@
     <div class="dispatcher-section">
       <!-- Optional divider line -->
       <div class="dispatcher-divider"></div>
-      
+
       <!-- Dispatcher Toggle Button -->
-      <div 
-        class="dispatcher-toggle" 
+      <div
+        class="dispatcher-toggle"
         [class.enabled]="dispatcherEnabled"
         (click)="toggleDispatcher()"
         [attr.aria-label]="dispatcherEnabled ? 'Disable Dispatcher Mode' : 'Enable Dispatcher Mode'"
       >
         <!-- Icon (always visible) -->
         <span class="dispatcher-icon">🎮</span>
-        
+
         <!-- Content (hidden when sidebar collapsed) -->
         <div class="dispatcher-content">
           <span class="dispatcher-label">Dispatcher</span>
-          
+
           <!-- NEW Badge (first time users) -->
           <span class="dispatcher-badge" *ngIf="showDispatcherBadge">
             NEW
           </span>
-          
+
           <!-- Status indicator -->
           <span class="dispatcher-status" [class.active]="dispatcherEnabled">
             {{ dispatcherEnabled ? 'ON' : 'OFF' }}
           </span>
         </div>
-        
+
         <!-- Pulsing dot (collapsed mode only, when disabled) -->
         <span class="pulse-dot" *ngIf="!dispatcherEnabled && showDispatcherBadge"></span>
       </div>
-      
+
       <!-- Helper text (expanded mode only) -->
       <div class="dispatcher-hint" *ngIf="!dispatcherEnabled && showDispatcherBadge">
         Try our new AI-powered command center
@@ -164,14 +158,14 @@
     <!-- ================= FOOTER ================= -->
     <div class="sidebar-footer">
 
-      <button class="utility-btn" 
+      <button class="utility-btn"
               [class.nav-btn--active]="currentRoute === 'contacts'"
               (click)="navigate('contacts')">
         <lucide-icon [img]="Users" class="nav-icon"></lucide-icon>
         <span class="label">Contacts</span>
       </button>
 
-      <button class="utility-btn" 
+      <button class="utility-btn"
               [class.nav-btn--active]="currentRoute === 'settings'"
               (click)="navigate('settings')">
         <lucide-icon [img]="Settings" class="nav-icon"></lucide-icon>

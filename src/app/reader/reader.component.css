@@ -392,3 +392,32 @@
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
   }
 }
+
+
+/* Email Body - Prevent horizontal overflow */
+.email-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.email-body p {
+  margin-bottom: 16px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap; /* Preserves line breaks but wraps text */
+}
+
+/* Also apply to the entire reader body container */
+.reader-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  word-wrap: break-word;
+}

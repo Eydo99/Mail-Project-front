@@ -23,8 +23,6 @@
 
         <select class="folder-dropdown" [(ngModel)]="moveToFolder" (change)="onFolderChange(moveToFolder)">
           <option value="" disabled selected>Choose folder...</option>
-          <option value="inbox" *ngIf="folderName !== 'inbox'">Inbox</option>
-          <option value="sent" *ngIf="folderName !== 'sent'">Sent</option>
           <option value="draft" *ngIf="folderName !== 'draft'">Draft</option>
           <div *ngFor="let folder of folders">
             <option [value]="'folder_' + folder.id" >{{folder.name}}</option>
