@@ -16,7 +16,7 @@ import { ContactRequest, ContactService } from '../../core/services/contact.serv
 })
 export class ContactsComponent implements OnInit {
   constructor(private contactService: ContactService) {}
-  
+
   contacts: Contact[] = [];
   searchTerm: string = '';
   sortBy: string = 'name';
@@ -32,7 +32,7 @@ export class ContactsComponent implements OnInit {
   formName: string = '';
   formEmails: Email[] = [];
   formPhones: Phone[] = [];
-  
+
   // Validation errors
   validationErrors: {
     name?: string;
@@ -46,15 +46,25 @@ export class ContactsComponent implements OnInit {
   }
 
   loadContacts(): void {
+    // Convert 1-indexed (display) to 0-indexed (backend)
+    const backendPage = this.currentPage - 1;
+
     console.log('Loading contacts...', {
-      currentPage: this.currentPage,
+      displayPage: this.currentPage,
+      backendPage: backendPage,
       itemsPerPage: this.itemsPerPage,
       searchTerm: this.searchTerm,
       sortBy: this.sortBy
     });
-    
+
+    // Ensure we never send negative page numbers
+    if (backendPage < 0) {
+      console.error('Invalid page number:', backendPage);
+      return;
+    }
+
     this.contactService.getAllContacts(
-      this.currentPage,
+      backendPage,
       this.itemsPerPage,
       this.searchTerm,
       this.sortBy
@@ -71,23 +81,27 @@ export class ContactsComponent implements OnInit {
     });
   }
 
-  onSearch(): void {
+  onSort(): void {
+    // Reset to page 1 when sorting changes
     this.currentPage = 1;
     this.loadContacts();
   }
 
-  onSort(): void {
+  onSearch(): void {
+    // Reset to page 1 when searching
+    this.currentPage = 1;
     this.loadContacts();
   }
 
   onPageChange(page: number): void {
+    // page comes from pagination component
     this.currentPage = page;
     this.loadContacts();
   }
 
   onItemsPerPageChange(itemsPerPage: number): void {
     this.itemsPerPage = itemsPerPage;
-    this.currentPage = 1;
+    this.currentPage = 1; // Reset to first page
     this.loadContacts();
   }
 
@@ -101,22 +115,22 @@ export class ContactsComponent implements OnInit {
   this.modalMode = 'edit';
   this.selectedContact = contact;
   this.formName = contact.name;
-  
+
   // Explicitly map isPrimary
-  this.formEmails = contact.emails && contact.emails.length > 0 
-    ? contact.emails.map(e => ({ 
-        address: e.address, 
-        isPrimary: e.isPrimary 
+  this.formEmails = contact.emails && contact.emails.length > 0
+    ? contact.emails.map(e => ({
+        address: e.address,
+        isPrimary: e.isPrimary
       }))
     : [{ address: '', isPrimary: true }];
-    
+
   this.formPhones = contact.phones && contact.phones.length > 0
-    ? contact.phones.map(p => ({ 
-        number: p.number, 
-        isPrimary: p.isPrimary 
+    ? contact.phones.map(p => ({
+        number: p.number,
+        isPrimary: p.isPrimary
       }))
     : [{ number: '', isPrimary: true }];
-    
+
   this.showModal = true;
 }
 
@@ -144,7 +158,7 @@ export class ContactsComponent implements OnInit {
     if (this.formEmails.length > 1) {
       const wasRemovingPrimary = this.formEmails[index].isPrimary;
       this.formEmails.splice(index, 1);
-      
+
       // If we removed the primary email, make the first one primary
       if (wasRemovingPrimary && this.formEmails.length > 0) {
         this.formEmails[0].isPrimary = true;
@@ -171,7 +185,7 @@ export class ContactsComponent implements OnInit {
     if (this.formPhones.length > 1) {
       const wasRemovingPrimary = this.formPhones[index].isPrimary;
       this.formPhones.splice(index, 1);
-      
+
       // If we removed the primary phone, make the first one primary
       if (wasRemovingPrimary && this.formPhones.length > 0) {
         this.formPhones[0].isPrimary = true;
@@ -190,7 +204,7 @@ export class ContactsComponent implements OnInit {
   saveContact(): void {
     // Clear previous errors
     this.validationErrors = {};
-    
+
     // Validate form
     if (!this.validateForm()) {
       return;
